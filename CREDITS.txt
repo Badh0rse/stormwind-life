@@ -1,0 +1,31 @@
+STORMWIND LIFE - CREDITS
+Unofficial World of Warcraft fan parody. Not affiliated with or endorsed by Blizzard Entertainment.
+
+3D MODELS (CC0 / public domain)
+  KayKit by Kay Lousberg - www.kaylousberg.com
+  Adventurers Character Pack, Medieval Hexagon Pack, Dungeon Remastered, Furniture Bits, Restaurant Bits
+
+MUSIC (all CC0 / public domain, from OpenGameArt.org)
+  music/town_fantasy_orchestral_theme.mp3   "Fantasy Orchestral Theme" by Joth          https://opengameart.org/content/fantasy-orchestral-theme
+  music/town_a_legend_will_rise.mp3         "A Legend Will Rise (Orchestral)" by CodeManu https://opengameart.org/content/a-legend-will-rise-orchestral
+  music/town_once_upon_a_time.mp3           "Once Upon a Time (loop)" by TAD            https://opengameart.org/content/once-upon-a-time-loop
+  music/night_at_home.mp3                   "At Home - Orchestral" by Wolfgang_         https://opengameart.org/content/at-home-orchestral
+  music/omens_fall_of_nightmares.mp3        "Fall of Nightmares" by nene                https://opengameart.org/content/fall-of-nightmares-epic-orchestral
+  music/omens_evil_approach.mp3             "Evil Approach" by nene                     https://opengameart.org/content/evil-approach
+  music/final_day_inevitable.mp3            "Inevitable" by vitalezzz                   https://opengameart.org/content/inevitable
+  music/apocalypse_doom_in_the_morning.mp3  "Doom in the Morning" by VishwaJai          https://opengameart.org/content/doom-in-the-morning
+  music/ruins_laments_of_the_war.mp3        "Laments of the War" by Cethiel             https://opengameart.org/content/laments-of-the-war
+  music/dive_shallows_waiting_ii.ogg        "Waiting II" by Kistol                      https://opengameart.org/content/waiting-ii
+  music/dive_fel_corrupted_minds.mp3        "Corrupted Minds" by vitalezzz              https://opengameart.org/content/corrupted-minds
+  music/dive_gnome_outworld.mp3             "Outworld" by vitalezzz                     https://opengameart.org/content/outworld
+  music/dive_naga_sigil.ogg                 "Sigil" by Kistol                           https://opengameart.org/content/sigil
+  music/kingdom_fantasy_choir_1.mp3         "Fantasy Choir" by cesisco                  https://opengameart.org/content/fantasy-choir-3-orchestral-pieces
+  music/kingdom_fantasy_choir_2.mp3         "Fantasy Choir" by cesisco                  https://opengameart.org/content/fantasy-choir-3-orchestral-pieces
+
+LIBRARIES
+  three.js (MIT) - https://threejs.org
+
+Everything else (buildings, textures, effects, sound effects, 2D diving art) is drawn in code.
+
+SOUND EFFECTS (sfx/ folder)
+Kenney.nl - RPG Audio, Impact Sounds, Interface Sounds. License: Creative Commons CC0 (public domain). See sfx/LICENSE-Kenney.txt.
