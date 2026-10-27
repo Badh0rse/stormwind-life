@@ -453,6 +453,7 @@ const BUILD=[
  {id:'home',name:'Your Rented Room',x:63,y:68,ox:80,oy:71,w:8,h:7,doors:[[70,71]],floor:'wood',hgt:8},
  {id:'train',name:'Training Hall',x:75,y:68,ox:96,oy:70,w:12,h:8,doors:[[75,71]],floor:'wood',hgt:9},
  {id:'keep',name:'Stormwind Keep',x:96,y:72,ox:97,oy:40,w:13,h:14,doors:[[102,85]],floor:'marble',hgt:19,style:'keep'},
+ {id:'posse',name:'Princess Posse Guild Hall',x:76,y:77,ox:76,oy:77,w:10,h:8,doors:[[76,80]],floor:'wood',hgt:9,roof:'pink'},
  {id:'hmaster',name:"Harbormaster's Office",x:24,y:-7,ox:24,oy:-7,w:8,h:6,doors:[[27,-2]],floor:'wood',hgt:8},
 ];
 for(const b of BUILD){b.dx=b.x-b.ox;b.dy=b.y-b.oy;}
@@ -468,7 +469,7 @@ const DECOR=[
  [52,67,3,8],
  [20,35,7,8],[32,35,8,8],
  [47,14,9,5],[80,14,9,5],
- [59,51,3,8],[84,50,3,8],[76,77,10,6],[59,82,12,3],
+ [59,51,3,8],[84,50,3,8],[59,82,12,3],
  [101,26,9,10],[96,44,3,9],[96,57,6,6],[103,57,7,6],[96,64,6,6],[103,64,7,6],
  [10,-7,8,4],[44,-7,9,4],[60,-7,9,4],
 ].filter(d=>d[3]>0).map(([x,y,w,h],i)=>{const mq=x<=43&&y>=15&&y<=45,dw=x>=90;return {id:'d'+i,decor:true,name:'',x,y,w,h,doors:[],hgt:(dw?7:9)+hash(x,y)*3,roof:mq?'purple':dw?(hash(y,x)<.5?'gray':'brown'):hash(y,x)<.12?'dark':'blue',style:dw||hash(x,y,3)<.2?'stonehouse':'house'};});
@@ -585,6 +586,9 @@ const ITEMS={
  lobster:{name:'Darkclaw Lobster',icon:'🦞',q:2,sell:15,loot:true},
  mightfish:{name:'Raw Glossy Mightfish',icon:'🐟',q:3,sell:26,loot:true},
  whitescale:{name:'Raw Whitescale Salmon',icon:'🐟',q:2,sell:14,loot:true},
+ fanbox:{name:'Bronze Fan Box',icon:'🎁',q:3,sell:0,use:true,verb:'Open',desc:'A gift from your adoring viewers. Princess Posse guild quests pay one each. Who knows what is inside?'},
+ boxers:{name:'Enchanted Boxer Shorts',icon:'🩲',q:4,sell:60,loot:true},
+ tiara:{name:'Sparkly Fan Tiara',icon:'👑',q:4,sell:80,loot:true},
 };
 const SKILLS={cooking:['Cooking','🍳','Better home-cooked meals.'],fishing:['Fishing','🎣','More bites and rarer catches.'],smithing:['Blacksmithing','⚒️','Higher pay at the Forge.'],arcane:['Arcane','🔮','Level 3 lets you conjure free food.'],charisma:['Charisma','💬','Jokes and flirting land more often.'],combat:['Combat','⚔️','Higher pay as a Stockade guard.']};
 // homes: [name, price, sleep speed, needs drain at home comforts, weekly rent]
@@ -670,6 +674,9 @@ const ACH={
  deaths:['⚰️','Corpse Run','Get defeated in a dungeon. It happens to the best of us.'],
  donor:['📦','Quartermaster\'s Friend','Donate to the Exodus stockpile.'],
  whelp10:['🔥','Dragonsbane (Junior)','Slay 10 dragon whelps.'],
+ posse:['😼','Welcome to the Posse','Finish a Princess Posse guild quest.'],
+ posseFav:['👑',"Princess Donut's Favorite",'Reach the top Princess Posse guild rank.'],
+ fanbox:['🎁','Loot Box Enjoyer','Open 5 Fan Boxes.'],
 };
 const WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const BABYNAMES=['Arthas Jr.','Jaina','Varian','Anduin','Tiffin','Bolvar','Calia','Moira','Tyrion','Lili','Gelbin','Tess','Shandris','Velen Jr.','Muradin','Aerith'];
@@ -793,6 +800,21 @@ const CHAINS={
   {type:'act',match:'Complain About Taxes',obj:'Clerk Pembrook',need:1,title:'Strongly Worded Complaint',text:'Hobbes has a complaint for Clerk Pembrook. It is eleven pages. Go complain about taxes.',gold:15},
   {type:'catch',need:5,title:'Fish Were Bigger Back Then',text:'"In my day fish were the size of gryphons." Catch 5 fish anywhere to prove him wrong.',gold:25,xp:['fishing',15]},
   {type:'deliver',item:'cookedFish',target:'Old Man Hobbes',title:'Supper for Hobbes',text:'Bring Hobbes a Grilled Snapper. He will say it was better in his day. Then eat all of it.',gold:50}]},
+ carl:{giver:'Carl',name:'You Will Not Break Me',posse:1,steps:[
+  {type:'kill',match:'kobold',need:6,manual:1,title:'Welcome to the Dungeon',text:'Carl woke up in a dungeon with no pants and a talking cat. It has been a week. Help him clear 6 Kobold Tunnelers at Fargodeep Camp. He kicks, you do everything else.',gold:35,xp:['combat',20]},
+  {type:'loot',match:'linen',need:4,manual:1,title:'Fashion Emergency',text:'Katia has asked, very politely, that Carl wear something. Collect 4 Linen Cloth from kobolds or the Catacombs.',gold:30},
+  {type:'act',match:'Inspect the Explosives',obj:"Carl's Explosives Crate",need:1,title:'Arts and Crafts',text:'Carl has been "crafting" in the guild hall. Look in his crate. Do NOT shake it.',gold:20},
+  {type:'kill',match:'cryptBoss',need:1,manual:1,title:'Boss Fight, Pantsless',text:'Carl wants a real boss. Grave Lord Mortimer in the Catacombs will do. Carl will be there in spirit. And in boxers.',gold:160,xp:['combat',50],give:['fanbox',2]}]},
+ donut:{giver:'Princess Donut',name:"Princess Donut's Fan Club",posse:1,steps:[
+  {type:'chat',need:3,title:'Fan Outreach',text:'"My fan count is SLIPPING." Chat with 3 citizens and mention Princess Donut. A lot.',gold:20,xp:['charisma',10]},
+  {type:'act',match:'New Look',obj:'Barber Chair',need:1,title:'Glow Up',text:'Princess Donut refuses to be seen with you looking like that. Get a New Look at the Barbershop.',gold:25},
+  {type:'deliver',item:'cookedFish',target:'Mongo',title:'Mongo Is Hungry',text:'Mongo is hungry. Mongo is always hungry. Grill a fish at home and bring it to Mongo at the guild hall. Keep your fingers.',gold:25},
+  {type:'kill',match:'koboldBoss',need:1,manual:1,title:'A Show-Stopping Finale',text:'"The viewers want a BOSS fight." Defeat Goldtooth at the back of Fargodeep Camp and make it look good. Donut will narrate.',gold:120,xp:['combat',40],give:['fanbox',2]}]},
+ mordecai:{giver:'Mordecai',name:'Welcome to the Guild',posse:1,steps:[
+  {type:'act',match:'Order a Safe Room Sandwich',obj:'Safe Room Bar',need:1,title:'Safe Room Basics',text:'"First lesson: eat when you can." Order a sandwich at the Safe Room Bar in the guild hall.',gold:15},
+  {type:'act',match:'Rent a Bed',obj:'Inn Bed',need:1,title:'Rest Is a Skill',text:'"Second lesson: sleep when you can." Rent a bed at the Gilded Rose and wake up Well Rested.',gold:20},
+  {type:'kill',match:'skelMinion',need:8,manual:1,title:'The Second Floor',text:'"Third lesson: the second floor is worse." Defeat 8 Skeleton Minions in the Catacombs (crypt door in the Cathedral gardens).',gold:50,xp:['combat',25]},
+  {type:'kill',match:'skelMage',need:3,manual:1,title:'Know Your Enemy',text:'"Casters first. Always casters first." Defeat 3 Skeleton Mages. Mordecai will act like he is not proud of you.',gold:100,xp:['combat',35],give:['fanbox',1]}]},
 };
 const QCAP=5;
 const chainStep=k=>{const C=CHAINS[k],i=(p.chains||{})[k]||0;return i<C.steps.length?{...C.steps[i],id:'c_'+k,chain:k,giver:C.giver,n:0}:null;};
@@ -893,7 +915,7 @@ function npcLine(n){
  if(S.ruined)return pick(n.lines);
  if(n.doomsayer)return pick(DOOM.doomsayer);
  if(n.san<30&&Math.random()<.6)return pick(DOOM.final.concat(DOOM.omen));
- if(n.race==='murloc')return Math.random()<.2*ph?pick(DOOM.murloc):pick(n.lines);
+ if(n.race==='murloc')return n.beast?pick(n.lines):Math.random()<.2*ph?pick(DOOM.murloc):pick(n.lines);
  if(Math.random()<[.18,.35,.55,.75,.9,1][ph]){const pool=ph>=3?DOOM.final.concat(DOOM.omen):ph===2?DOOM.omen.concat(DOOM.legend):DOOM.legend;return pick(pool);}
  return pick(n.lines);
 }
@@ -1091,12 +1113,27 @@ const OBJS=[
  {x:92,y:70,name:"Lil' Critters Pet Shop",vis:VENDOR('Rogue','gnome','#f0c040'),acts:[{label:'Browse Pets',mins:0,done(){openVendor('pets');}}]},
  {x:92,y:74,name:'Mailbox',vis:{proc:'mailbox'},acts:[
   {label:'Check Mail',mins:5,gain:{social:5},anim:'Interact',done(){checkMail();}}]},
+ // Princess Posse Guild Hall (Old Town)
+ {x:79,y:78,name:'Posse Quest Board',vis:{proc:'board'},acts:[
+  {label:'Read the Guild Orders',mins:0,done(){openPosseBoard();}}]},
+ {x:82,y:78,w:2,name:'Safe Room Bar',vis:{m:'dun/table_long_decorated_A',fit:3},acts:[
+  {label:'Order a Safe Room Sandwich (4g)',cost:4,mins:20,gain:{hunger:55,social:5},tag:['hunger'],anim:'Use_Item',done(){chat(pick(['Mordecai slides you a sandwich. "Eat. You look like you\'ve been crawling."','The sandwich is suspicious. It is also delicious. Classic safe room.','Mongo watches every bite you take. Every. Single. Bite.']));}},
+  {label:'Have a Drink with the Posse (3g)',cost:3,mins:30,gain:{fun:20,social:25},tag:['social'],anim:'Use_Item',done(){chat(pick(['Katia raises a glass: "To the Posse. And to Carl\'s pants, wherever they are."','Carl tells the story of the time he kicked a boss to death. It gets longer every time.','Donut gives a speech about herself. Everyone claps. Mongo claps loudest, with his tail.','Mordecai says "one drink" and pours four.']));}}]},
+ {x:84,y:81,rot:-90,name:"Donut's Velvet Throne",vis:{m:'fur/armchair',fit:1.5},use:'sit',acts:[
+  {label:"Sit on the Princess's Throne",mins:15,gain:{fun:30},anim:'Sit_Chair_Idle',use:'sit',done(){const d=npcs.find(n=>n.name==='Princess Donut');if(d){relUp(d,-4);say(d,pick(['Excuse me. EXCUSE ME. That is a PRINCESS chair.','Carl! Someone is in my chair! CARL!','I am going to pretend I did not see that.']));}}},
+  {label:'Nap Where Donut Naps',mins:60,gain:{energy:20,sanity:8},tag:['energy'],anim:'Sit_Chair_Idle',use:'sit',done(){chat('You wake up covered in cat hair. It is everywhere. It will always be everywhere now.');}}]},
+ {x:78,y:83,name:'Fan Mail Pile',vis:{m:'hex/decoration/props/sack',fit:1},acts:[
+  {label:'Read Fan Mail',mins:20,gain:{fun:15,social:10,sanity:5},tag:['fun'],anim:'Interact',done(){chat('📨 <i>'+pick(FANMAIL)+'</i>','say');}}]},
+ {x:84,y:83,name:"Carl's Explosives Crate",vis:{m:'dun/crates_stacked',fit:1.2},acts:[
+  {label:'Inspect the Explosives',mins:10,gain:{fun:10},anim:'Interact',done(){chat(pick(['The crate is labelled "DEFINITELY NOT BOMBS" in Carl\'s handwriting.','There is a jug in here with a fuse. Also a note: "DO NOT SHAKE. -C"','You count eleven sticks of homemade dynamite and one sandwich. You leave the sandwich.']));}},
+  {label:'Help Carl "Craft"',mins:45,gain:{fun:25,hygiene:-15},xp:['combat',8],anim:'Interact',done(){if(Math.random()<.2){p.needs.hygiene=clamp(p.needs.hygiene-30,0,100);sfx('thud',.8);chat('💥 BOOM. Your eyebrows are gone. Carl says that is "within tolerances."');}else chat('You and Carl make something that fizzes. Katia makes you put it outside.');}}]},
 ];
 for(const o of OBJS){{const s=SHIFT(o.x,o.y);o.x=s[0];o.y=s[1];}o.y+=OFF;o.w=o.w||1;o.h=o.h||1;o.cx=o.x+o.w/2;o.cy=o.y+o.h/2;o.rot=o.rot||0;if(!o.use)o.use=null;}
 const oname=o=>typeof o.name==='function'?o.name():o.name;
 const shown=o=>!o.show||o.show();
 function rebuildBlocked(){blocked.fill(0);for(const o of OBJS)if(!p||shown(o))for(let y=o.y;y<o.y+o.h;y++)for(let x=o.x;x<o.x+o.w;x++)blocked[I(x,y)]=1;}
 rebuildBlocked();
+const HALLB=BID('posse'),HALLIN=[];for(let y=HALLB.y+1;y<HALLB.y+HALLB.h-1;y++)for(let x=HALLB.x+1;x<HALLB.x+HALLB.w-1;x++)if(passable(x,y))HALLIN.push({x,y});
 const forgePay=()=>Math.round((18+6*lvl('smithing'))*payMult());
 const guardPay=()=>Math.round((20+5*lvl('combat'))*payMult()*(p.cls==='warrior'?1.15:1));
 
@@ -1176,11 +1213,16 @@ const NPCDEF=[
  {name:'Bruno Barrelchest',race:'human',model:'Barbarian',gear:[],armor:'#e08a3a',zone:'Old Town'},
  {name:'Grgl',race:'murloc',harbor:true},
  {name:'Doomsayer Ezekiel',race:'human',model:'Mage',gear:['Spellbook_open'],armor:'#555555',post:[47,64],doomsayer:true},
+ {name:'Carl',race:'human',model:'Barbarian',gear:[],armor:'#6b4a2e',hall:true,kind:'Crawler · Pants Optional',lines:['I am not wearing pants. We are not discussing it.','Goddamn kobolds.','You will not break me. You will not break ME.','Don\'t touch the crate. I put some of my best work in that crate.','Donut, get off the table.','Kicking is a whole fighting style. Look it up.']},
+ {name:'Princess Donut',race:'murloc',beast:'donut',icon:'😼',kind:'Persian Show Cat · Guild Leader',hall:true,lines:['I am Princess Donut, Grand Champion. You may admire me.','CARL! Carl, someone is talking to me.','My fans adore me. Have you followed me? You should follow me.','Mongo, NO. Spit that out.','A princess does not do quests. A princess hands out quests.','This guild hall needs more pillows and fewer Carls.']},
+ {name:'Mongo',race:'murloc',beast:'mongo',icon:'🦖',kind:'Dinosaur · Very Good Boy',hall:true,lines:['RAWR! (He is trying to help.)','*Mongo sniffs your pockets for snacks*','*happy dinosaur chirp*','*Mongo knocks over a chair with his tail and looks very proud*']},
+ {name:'Katia',race:'human',model:'Knight',gear:['Round_Shield'],armor:'#8a8a9a',hall:true,kind:'Crawler · Tank',lines:['Someone in this guild has to have a plan. It is me.','I tank. You stand behind me. That is the plan.','Carl, the explosives go OUTSIDE.','Welcome to the Posse. Wipe your feet.']},
+ {name:'Mordecai',race:'human',model:'Mage',gear:['Spellbook_open'],armor:'#4a3a5a',hall:true,kind:'Game Guide · Guild Manager',lines:['Rule one: don\'t die. Rule two: see rule one.','Rest in a safe room. Heal up. Then go do something stupid.','The viewers love drama. Try not to give them too much.','Take the quest. Get the box. Open the box.','I have guided a lot of crawlers. You are... one of them.']},
  {name:'Mrgl the Lost',race:'murloc'},
 ];
 const ZT={};const zoneTiles=z=>ZT[z]||(ZT[z]=roadTiles.filter(t=>zoneAt(t.x,t.y)===z));
-const npcs=NPCDEF.map((d,i)=>{const t=d.harbor?pick(zoneTiles('Stormwind Harbor')):d.post?{x:d.post[0],y:d.post[1]+OFF}:d.zone?pick(zoneTiles(d.zone)):pick(roadTiles);
- const lines=d.race==='murloc'?LINES.murloc:d.kid?LINES.kid:d.guard?LINES.guard.concat(LINES.general.slice(0,5)):d.harbor?LINES.sailor.concat(LINES.general.slice(0,6)):(LINES[d.race]||[]).concat(LINES.general);
+const npcs=NPCDEF.map((d,i)=>{const t=d.hall?pick(HALLIN):d.harbor?pick(zoneTiles('Stormwind Harbor')):d.post?{x:d.post[0],y:d.post[1]+OFF}:d.zone?pick(zoneTiles(d.zone)):pick(roadTiles);
+ const lines=d.lines?d.lines:d.race==='murloc'?LINES.murloc:d.kid?LINES.kid:d.guard?LINES.guard.concat(LINES.general.slice(0,5)):d.harbor?LINES.sailor.concat(LINES.general.slice(0,6)):(LINES[d.race]||[]).concat(LINES.general);
  return {...d,isNpc:true,x:t.x+.5,y:t.y+.5,path:[],wait:rand(0,4),yaw:0,moving:false,lines,rel:0,love:0,status:null,san:d.doomsayer?15:rand(70,95),talkT:rand(5,30),hold:false};});
 const HOMEB=BID('home');
 const homeInside=[];for(let y=HOMEB.y+1;y<HOMEB.y+HOMEB.h-1;y++)for(let x=HOMEB.x+1;x<HOMEB.x+HOMEB.w-1;x++)homeInside.push({x,y});
@@ -1372,7 +1414,7 @@ function progressTask(){
  if(a.sleep?(a.until()||t.el>=t.dur):t.el>=t.dur)completeTask();
 }
 const BAITS={lure:[180,'You attach a Shiny Lure. Fish will bite more often for 3 hours.'],bait:[120,'You bait your hook with a wriggling nightcrawler. Fish bite more for 2 hours.'],glowBait:[180,'You attach the Glowing Legendary Bait. Something big is watching... (3 hours)']};
-function useItem(id){const it=ITEMS[id];if(id==='healpot'){closePanel();drinkPotion();return;}if(BAITS[id]&&p.items[id]>0){takeItem(id);buff(id,BAITS[id][0]);closePanel();chat(BAITS[id][1]);return;}
+function useItem(id){const it=ITEMS[id];if(id==='fanbox'&&p.items.fanbox>0){takeItem('fanbox');closePanel();openFanBox();return;}if(id==='healpot'){closePanel();drinkPotion();return;}if(BAITS[id]&&p.items[id]>0){takeItem(id);buff(id,BAITS[id][0]);closePanel();chat(BAITS[id][1]);return;}
  if(id==='bottle'&&p.items.bottle>0){takeItem('bottle');closePanel();chat('🍾 <i>"'+esc(pick(BOTTLES))+'"</i>','say');ach('bottle');const g=Math.round(rand(5,30));chat(`There were also ${g} gold coins rattling around inside.`);addGold(g);return;}if(!it.eat||!(p.items[id]>0))return;closePanel();
  startInPlace({label:`${it.verb} ${it.name}`,mins:10,anim:'Use_Item',gain:{...it.eat,...(id==='ale'&&p.race==='dwarf'?{fun:30}:{})},start(){takeItem(id);},done(){p.flags.ate=1;if(it.buff)buff(it.buff,120);}});}
 const hearthSpot=()=>p.hearth==='inn'?T(44,66):T(84,74);
@@ -1626,7 +1668,7 @@ function updateNpc(n,dt,ws){
  if(n.san<12&&!n.doomsayer&&!n.hold&&!n.child&&Math.random()<dt*.02){n.cower=rand(15,40);n.path=[];say(n,pick(['We\'re all going to die...','I don\'t want to burn...','*rocking back and forth*']),false);return;}
  if(n.path.length)moveAlong(n,dt*1.6*ws*(n.san<30?1.4:1));
  else{n.moving=false;if(!n.hold){n.wait-=dt*ws;if(n.wait<=0){n.wait=rand(3,9);
-  const d=(n.status==='spouse'||n.child)?familyDest():jobDest(n)||partnerDest(n)||(n.harbor?pick(harborTiles):n.post?pick(roadTiles.filter(t=>Math.abs(t.x-n.post[0])+Math.abs(t.y-n.post[1]-OFF)<5)):n.zone?pick(zoneTiles(n.zone)):pick(roadTiles));
+  const d=(n.status==='spouse'||n.child)?familyDest():jobDest(n)||partnerDest(n)||(n.hall?pick(HALLIN):n.harbor?pick(harborTiles):n.post?pick(roadTiles.filter(t=>Math.abs(t.x-n.post[0])+Math.abs(t.y-n.post[1]-OFF)<5)):n.zone?pick(zoneTiles(n.zone)):pick(roadTiles));
   if(d){const pth=findPath(Math.floor(n.x),Math.floor(n.y),(x,y)=>x===d.x&&y===d.y,d.x,d.y,9000);if(pth)n.path=pth.slice(0,45);}}}}
  if(p&&S.running){n.talkT-=dt;if(n.talkT<=0){n.talkT=n.doomsayer?rand(5,9):rand(15,35);if(!p.hidden&&!n.bubble&&Math.hypot(n.x-p.x,n.y-p.y)<(n.doomsayer?14:8)){const now=performance.now(),toChat=!n.doomsayer||now-(n.lastChat||-1e9)>40000;if(toChat)n.lastChat=now;say(n,npcLine(n),toChat);}}}
 }
@@ -1713,7 +1755,9 @@ function npcActs(n){
  if(!n.doomsayer&&n.race!=='murloc'&&n.san<70)acts.push({label:'Reassure',mins:20,gain:{social:8},anim:'Interact',done(){n.san=clamp(n.san+25,0,100);relUp(n,6);p.needs.sanity=clamp(p.needs.sanity-2,0,100);say(n,pick(['Thank you... I needed to hear that.','You really think we\'ll be okay?','*takes a deep breath* Okay. Okay.']));}},
   {label:'Share a Calming Drink (3g)',cost:3,mins:20,gain:{sanity:6,social:10},anim:'Use_Item',done(){n.san=clamp(n.san+15,0,100);relUp(n,4);say(n,'...that helps. Cheers.');}});
  if(n.name==='Sister Amelia')acts.push({label:'Seek Counsel',mins:45,gain:{sanity:45,social:10},tag:['sanity'],anim:'Sit_Floor_Idle',done(){ach('counsel');say(n,'Whatever comes, you are not alone. The Light remembers everyone.');}});
- if(n.race==='murloc')acts.push({label:'Give a Fish',mins:5,req:()=>rawId()?null:'You need a raw fish.',done(){takeItem(rawId());p.needs.fun=clamp(p.needs.fun+30,0,100);relUp(n,25);say(n,'MRGLGLGL!! ♥');ach('murloc');}});
+ if(n.race==='murloc')acts.push({label:'Give a Fish',mins:5,req:()=>rawId()?null:'You need a raw fish.',done(){takeItem(rawId());p.needs.fun=clamp(p.needs.fun+30,0,100);relUp(n,25);say(n,n.beast==='donut'?'Fish? For ME? ...I will allow it.':n.beast==='mongo'?'*CHOMP* (The fish is gone. So is part of your sleeve.)':'MRGLGLGL!! ♥');if(!n.beast)ach('murloc');}});
+ if(n.beast==='donut')acts.push({label:'Compliment the Princess',mins:10,gain:{social:12,fun:8},xp:['charisma',4],anim:'Idle',done(){relUp(n,8);say(n,pick(['Obviously.','I know. But thank you for noticing.','Carl! Did you hear that? Write it down.','You have excellent taste. Unlike Carl.']));}});
+ if(n.beast==='mongo')acts.push({label:'Pet Mongo',mins:10,gain:{fun:20,sanity:8},tag:['fun'],anim:'Interact',done(){relUp(n,8);say(n,pick(['*happy chirp*','*Mongo licks your whole face*','RAWR! (affectionately)','*his tail wag knocks over a stool*']));}});
  if(n.kid&&!n.child)acts.push({label:'Give 1 Gold',cost:1,mins:2,done(){relUp(n,8);say(n,'Thanks! I\'m saving up for a mount!');}});
  if(n.child)acts.push({label:'Play Catch',mins:30,gain:{fun:25,social:15,sanity:15},tag:['fun'],anim:'Throw',done(){relUp(n,5);say(n,'Again! Again!');}},
   {label:'Help With Homework',mins:30,gain:{social:10},xp:['arcane',8],anim:'Spellcasting',done(){say(n,'So the Arcane is just... spicy math?');}});
@@ -1778,7 +1822,7 @@ function qBanner(a,b){if(/Complete|ready/i.test(a)){sfx('confirm',.6);setTimeout
 function completeQuest(q){
  const i=p.quests.indexOf(q);if(i<0)return;p.quests.splice(i,1);
  p.flags.questsDone=(p.flags.questsDone||0)+1;chat(`Quest completed: <b>${q.title}</b>`,'ach');qBanner('Quest Complete!',`${q.title} · +${q.gold}g`);
- addGold(q.gold);if(q.xp)addXp(q.xp[0],q.xp[1]);if(q.give)addItem(q.give[0],q.give[1]);
+ addGold(q.gold);if(q.xp)addXp(q.xp[0],q.xp[1]);if(q.give)addItem(q.give[0],q.give[1]);if(q.guild||(q.chain&&CHAINS[q.chain].posse))posseDone(q);
  prepAdd(q.type==='divekill'||(q.xp&&q.xp[0]==='combat')?'def':'sup',q.chain?3:2,'quest');
  const g=npcs.find(n=>n.name===q.giver);if(g)relUp(g,10);
  if(p.flags.questsDone>=5)ach('quests5');if(p.flags.questsDone>=25)ach('quests25');
@@ -1792,6 +1836,61 @@ function boardOffers(){
   while(offers.length<4&&pool.length)offers.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);p.board={day:day(),offers};}
  return p.board.offers;
 }
+
+// ---------------- the Princess Posse guild (Dungeon Crawler Carl parody) ----------------
+const GQ=[
+ {type:'kill',match:'kobold',need:10,manual:1,title:'Floor One Speedrun',giver:'Carl',text:'Carl says the kobolds are "basically the tutorial." Clear 10 Kobold Tunnelers at Fargodeep Camp. Pants optional.',gold:45,xp:['combat',25]},
+ {type:'loot',match:'candle',need:8,manual:1,title:'Scented Candles',giver:'Princess Donut',text:'Princess Donut wants scented candles for the guild hall. The kobolds only have unscented. She will allow it. Collect 8 Kobold Candles.',gold:40},
+ {type:'kill',match:'koboldBoss',need:1,manual:1,title:'Boss Battle!',giver:'Princess Donut',text:'The viewers love a boss fight. Defeat Goldtooth and make it look GOOD. Donut is watching. Everyone is watching.',gold:90,xp:['combat',35],give:['healpot',2]},
+ {type:'kill',match:'koboldMiner',need:5,manual:1,title:'Mining for Ratings',giver:'Mordecai',text:'"Miners hit harder than tunnelers. The audience likes it when you get hit." Defeat 5 Kobold Miners.',gold:50,xp:['combat',25]},
+ {type:'kill',match:'skelMinion',need:12,manual:1,title:'Crawl the Catacombs',giver:'Katia',text:'Katia needs the Catacombs cleared so the Posse can "grind in peace." Defeat 12 Skeleton Minions.',gold:60,xp:['combat',30]},
+ {type:'kill',match:'skelWarrior',need:6,manual:1,title:'Tank and Spank',giver:'Katia',text:'Katia tanks. You spank. Defeat 6 Skeleton Warriors in the Catacombs.',gold:75,xp:['combat',35]},
+ {type:'kill',match:'cryptBoss',need:1,manual:1,title:'Ratings Week',giver:'Mordecai',text:'Grave Lord Mortimer is a floor boss in everything but name. Beat him and the sponsors will notice.',gold:150,xp:['combat',55],give:['healpot',3]},
+ {type:'loot',match:'linen',need:6,manual:1,title:'Pants Drive',giver:'Katia',text:'Katia started a pants drive for Carl. Carl did not ask for this. Collect 6 Linen Cloth.',gold:40},
+ {type:'loot',match:'bone',need:6,manual:1,title:'Chew Toys',giver:'Mongo',text:'Mongo drops a slobbery skull at your feet and stares. He wants 6 Bone Fragments from the Catacombs. RAWR.',gold:45},
+ {type:'dance',need:2,title:'Give the Viewers a Show',giver:'Princess Donut',text:'"Engagement is down." /dance twice at the Pig & Whistle. Donut will judge your form.',gold:25,xp:['charisma',10]},
+ {type:'act',match:'New Look',obj:'Barber Chair',need:1,title:'Makeover Montage',giver:'Princess Donut',text:'Donut says your look is "very floor one." Get a New Look at the Barbershop.',gold:30},
+ {type:'deliver',item:'cookedFish',title:'Feed Mongo',giver:'Princess Donut',target:'Mongo',text:'Mongo is hungry. Bring him a Grilled Snapper (grill any raw fish at home). Mind the teeth.',gold:25},
+ {type:'deliver',item:'cookedFeast',title:"Mongo's Birthday Feast",giver:'Carl',target:'Mongo',text:'It is Mongo\'s birthday. It is always Mongo\'s birthday when food is involved. Bring him a Seafood Feast.',gold:60,xp:['cooking',15]},
+ {type:'act',match:'Rent a Bed',obj:'Inn Bed',need:1,title:'Safe Room Rules',giver:'Mordecai',text:'"Crawlers who skip sleep become crawlers who skip living." Rent a bed at the Gilded Rose.',gold:20},
+ {type:'act',match:'Tell a Joke',npc:1,need:3,title:'Charisma Check',giver:'Mordecai',text:'Fans like crawlers with personality. Tell jokes to 3 citizens. Carl\'s jokes do not count.',gold:30,xp:['charisma',12]},
+ {type:'dummy',need:4,title:'Kick Practice',giver:'Carl',text:'Carl\'s whole fighting style is kicking. Beat up 4 training dummies and really commit to it.',gold:30,xp:['combat',15]},
+ {type:'chat',need:3,title:'Grow the Fanbase',giver:'Princess Donut',text:'Chat with 3 citizens. Mention that Princess Donut is accepting new fans.',gold:22,xp:['charisma',10]},
+ {type:'act',match:'Haggle for Fun',obj:'Market Stall',need:2,title:'Sponsor Negotiations',giver:'Mordecai',text:'Mordecai wants to see if you can negotiate with sponsors. Practice on the baker. Haggle twice at the Market Stall.',gold:25,xp:['charisma',8]},
+ {type:'divekill',match:'murloc',need:5,manual:1,title:'Bonus Level',giver:'Katia',text:'Katia heard the deep sea is "a bonus level." Dive with Captain Saltbeard and drive off 5 murlocs in the Murloc Grottos.',gold:55,xp:['combat',20]},
+];
+const POSSE_RANKS=[[0,'New Crawler'],[30,'Posse Member'],[80,'Fan Favorite'],[150,'Royal Bodyguard'],[250,"Princess Donut's Favorite"]];
+const FANMAIL=['"Dear Princess Donut, you are my favorite crawler. Please tell Carl to put on pants." — a viewer','"I watched your kobold fight 40 times. You missed every swing. Iconic." — a fan','"Can Mongo be in more episodes?" — three thousand identical letters','"Sponsor offer: say our name on camera and we will send a potion." You say it. No potion arrives.','"You are my third favorite crawler. Do not tell the first two." — anonymous','"Donut, your tiara is crooked." Donut has demanded this letter be burned.','"Katia is the only adult in that guild." — everyone'];
+const posse=()=>(p.guild=p.guild||{rep:0,boxes:0});
+const posseRank=()=>{const r=posse().rep;let k=POSSE_RANKS[0];for(const x of POSSE_RANKS)if(r>=x[0])k=x;return k;};
+function posseOffers(){const G=posse();
+ if(G.day!==day()){const pool=GQ.map((q,i)=>i).filter(i=>!p.quests.some(q=>q.id==='g'+i)),offers=[];
+  while(offers.length<3&&pool.length)offers.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);G.day=day();G.offers=offers;}
+ return G.offers;}
+function openPosseBoard(){
+ S.panel='posse';const G=posse(),offers=posseOffers(),r=posseRank(),nx=POSSE_RANKS.find(x=>x[0]>G.rep);
+ openPanel('Princess Posse Guild Board','<p class="sub" style="color:#ff9ad5">😼 "Welcome to MY guild. Carl is also here." — Princess Donut</p>'
+  +`<p class="sub">Guild rank: <b style="color:#ffd100">${r[1]}</b> · Guild Rep ${G.rep}${nx?` / ${nx[0]} for ${nx[1]}`:''} · Fan Boxes opened: ${G.boxes||0}</p>`
+  +'<p class="sub">Three new guild orders every morning. Every guild quest pays a 🎁 Bronze Fan Box (open it from your Bags). Carl, Donut and Mordecai have storylines too: look for the yellow <b>!</b></p>'
+  +(offers.length?offers.map(i=>{const q=GQ[i];return `<div class="row"><div class="ic">😼</div><div class="grow"><div><b style="color:#ff9ad5">${q.title}</b> <span class="sub">from ${esc(q.giver)}</span></div><div class="sub" style="color:#ddd">${q.text}</div><div class="sub">Reward: ${q.gold}g + 🎁 Fan Box${q.xp?' · '+SKILLS[q.xp[0]][1]+' XP':''}</div></div><button class="btn" data-gacc="${i}" ${p.quests.length>=QCAP?'disabled':''}>Accept</button></div>`;}).join(''):'<p class="sub">No new guild orders today. Mordecai says come back tomorrow.</p>'));
+ $('pbody').querySelectorAll('[data-gacc]').forEach(b=>b.onclick=()=>{const i=+b.dataset.gacc;if(p.quests.length>=QCAP)return;p.quests.push({...GQ[i],id:'g'+i,guild:1,n:0});G.offers=G.offers.filter(x=>x!==i);chat(`Guild quest accepted: <b>${GQ[i].title}</b>`);qBanner('Quest Accepted',GQ[i].title);openPosseBoard();});
+}
+function posseDone(q){
+ const G=posse(),before=posseRank();G.rep+=['koboldBoss','cryptBoss'].includes(q.match)?20:10;
+ if(q.guild)addItem('fanbox',1);ach('posse');
+ chat(`😼 <i>"${pick(['Adequate. The fans will love it.','CARL! Did you see that? Of course you did not.','That was almost as good as something I would do.','Mongo is very proud of you. I am... also fine with it.'])}"</i> — Princess Donut`,'say');
+ const r=posseRank();if(r!==before){chat(`👑 Princess Posse rank up: <b>${r[1]}</b>! Katia pins a slightly crooked badge on you.`,'ach');prepAdd('ally',5,'guild');}
+ if(G.rep>=POSSE_RANKS[POSSE_RANKS.length-1][0])ach('posseFav');}
+function openFanBox(){
+ const G=posse();G.boxes=(G.boxes||0)+1;const r=Math.random();let t;
+ if(r<.35){const g=Math.round(rand(25,90));addGold(g);t=`${g} gold from your adoring viewers`;}
+ else if(r<.55){addItem('healpot',2);t='2 Minor Healing Potions. "Stay alive." — Mordecai';}
+ else if(r<.67){addItem('glowBait',1);t='Glowing Legendary Bait. A sponsor really wants you to go fishing.';}
+ else if(r<.8){addItem('boxers',1);t='Enchanted Boxer Shorts. Carl looks... interested.';}
+ else if(r<.9){addItem('tiara',1);t='a Sparkly Fan Tiara. Donut says it is "acceptable, for a peasant."';}
+ else{addItem('cookedFeast',1);t='a Seafood Feast. Mongo is staring at it.';}
+ sfx('loot',.8);qBanner('Fan Box Opened!',t.replace(/<[^>]+>/g,''));chat(`🎁 You open a Bronze Fan Box! Inside: <b>${t}</b>`,'ach');
+ if(G.boxes>=5)ach('fanbox');}
 
 // =====================================================================
 // menus & panels
@@ -1809,7 +1908,7 @@ function actSub(a){
 }
 function openMenu(o,sx,sy){
  const acts=(o.isNpc?npcActs(o):o.acts).filter(a=>!a.hide||!a.hide());
- const head=o.isNpc?`<span style="font-size:22px">${o.race==='murloc'?'🐸':o.guard?'🛡️':o.child?'🧒':'🙂'}</span><div>${esc(o.name)}<small>${o.race==='murloc'?'Murloc (Lost)':RACES[o.race].name}${o.child?' · Your kid':''} · ${repLabel(o.rel)} · 🧠 ${sanLabel(o.san)}${romanceable(o)&&(o.love>0||o.status)?`<br><span style="color:#ff9ad5">${hearts(o.love)}</span> ${o.status==='spouse'?'Spouse':o.status==='dating'?'Dating':'Crush'}`:''}</small></div>`
+ const head=o.isNpc?`<span style="font-size:22px">${o.race==='murloc'?(o.icon||'🐸'):o.guard?'🛡️':o.child?'🧒':'🙂'}</span><div>${esc(o.name)}<small>${o.kind||(o.race==='murloc'?'Murloc (Lost)':RACES[o.race].name)}${o.child?' · Your kid':''} · ${repLabel(o.rel)} · 🧠 ${sanLabel(o.san)}${romanceable(o)&&(o.love>0||o.status)?`<br><span style="color:#ff9ad5">${hearts(o.love)}</span> ${o.status==='spouse'?'Spouse':o.status==='dating'?'Dating':'Crush'}`:''}</small></div>`
   :`<div>${esc(oname(o))}</div>`;
  menu.innerHTML=`<div class="mh">${head}</div>`+acts.map((a,i)=>{
   const why=(a.req&&a.req())||((a.cost||0)>p.gold?'Not enough gold.':'');
@@ -1899,7 +1998,7 @@ function openFriends(){
  S.panel='friends';
  const fam=[p.spouse?`Spouse: <b>${esc(p.spouse)}</b>`:'Single (citizens at Honored can be flirted with)',p.babies.length?`Babies: ${p.babies.map(b=>esc(b.name)).join(', ')}`:'',p.children.length?`Kids: ${p.children.map(b=>esc(b.name)).join(', ')}`:''].filter(Boolean).join('<br>');
  const G=(p.flags.gossip||[]).slice(0,6);
- openPanel('Relationships',`<p class="sub" style="color:#ffd8ef">${fam}</p>`+`<div class="lbl" style="color:#ffd100">🗞 Town Gossip</div>`+(G.length?G.map(g=>`<div class="sub" style="color:#ddd">Day ${g.d}: ${esc(g.text)}</div>`).join(''):'<div class="sub">Nothing yet. Citizens chat, make friends and fall in love on their own.</div>')+`<div class="lbl" style="color:#ffd100;margin-top:10px">Citizens</div>`+npcs.slice().sort((a,b)=>b.rel-a.rel).map(n=>{const fr=n.knownF?bestOf(n,1):null,en=n.knownF?bestOf(n,-1):null,j=JOBS[n.name];return `<div class="row"><div class="ic">${n.race==='murloc'?'🐸':n.guard?'🛡️':n.child?'🧒':n.partner?(n.pstat==='married'?'💍':'💕'):'🙂'}</div><div class="grow"><div><b>${esc(n.name)}</b> <span style="color:#1eff00">${repLabel(n.rel)}</span> <span style="color:#5fd0c8">🧠${Math.round(n.san==null?80:n.san)}</span>${romanceable(n)&&(n.love>0||n.status)?` <span style="color:#ff9ad5">${hearts(n.love)}${n.status?' '+(n.status==='spouse'?'Spouse':'Dating'):''}</span>`:''}</div><div class="sbar"><div style="width:${n.rel}%;background:linear-gradient(90deg,#1e8f1e,#5fe05f)"></div></div><div class="sub">${[j?'💼 '+j[3]+` (${j[1]}:00–${j[2]%24}:00)`:'',n.known&&n.likes?'❤ Likes '+n.likes.map(t=>TOPICS[t]).join(', '):'',n.partner?`${n.pstat==='married'?'💍 Married to':'💕 Dating'} ${esc(n.partner)}`:'',fr&&fr.v>=40?`🤝 Best friend: ${esc(fr.n)}`:'',en&&en.v<=-30?`⚔ Rival: ${esc(en.n)}`:''].filter(Boolean).join(' · ')}</div></div></div>`;}).join('')+'<p class="sub" style="margin-top:8px">Ask citizens what they like, then talk about it for a big friendship boost. Ask about their life to learn who their friends, rivals and partners are. Chat and joke to build friendship. At Honored you can flirt, give flowers and go on dates. Date someone, buy a ring, propose, and start a family (or adopt at the Orphanage).</p>');
+ openPanel('Relationships',`<p class="sub" style="color:#ffd8ef">${fam}</p>`+`<div class="lbl" style="color:#ffd100">🗞 Town Gossip</div>`+(G.length?G.map(g=>`<div class="sub" style="color:#ddd">Day ${g.d}: ${esc(g.text)}</div>`).join(''):'<div class="sub">Nothing yet. Citizens chat, make friends and fall in love on their own.</div>')+`<div class="lbl" style="color:#ffd100;margin-top:10px">Citizens</div>`+npcs.slice().sort((a,b)=>b.rel-a.rel).map(n=>{const fr=n.knownF?bestOf(n,1):null,en=n.knownF?bestOf(n,-1):null,j=JOBS[n.name];return `<div class="row"><div class="ic">${n.race==='murloc'?(n.icon||'🐸'):n.guard?'🛡️':n.child?'🧒':n.partner?(n.pstat==='married'?'💍':'💕'):'🙂'}</div><div class="grow"><div><b>${esc(n.name)}</b> <span style="color:#1eff00">${repLabel(n.rel)}</span> <span style="color:#5fd0c8">🧠${Math.round(n.san==null?80:n.san)}</span>${romanceable(n)&&(n.love>0||n.status)?` <span style="color:#ff9ad5">${hearts(n.love)}${n.status?' '+(n.status==='spouse'?'Spouse':'Dating'):''}</span>`:''}</div><div class="sbar"><div style="width:${n.rel}%;background:linear-gradient(90deg,#1e8f1e,#5fe05f)"></div></div><div class="sub">${[j?'💼 '+j[3]+` (${j[1]}:00–${j[2]%24}:00)`:'',n.known&&n.likes?'❤ Likes '+n.likes.map(t=>TOPICS[t]).join(', '):'',n.partner?`${n.pstat==='married'?'💍 Married to':'💕 Dating'} ${esc(n.partner)}`:'',fr&&fr.v>=40?`🤝 Best friend: ${esc(fr.n)}`:'',en&&en.v<=-30?`⚔ Rival: ${esc(en.n)}`:''].filter(Boolean).join(' · ')}</div></div></div>`;}).join('')+'<p class="sub" style="margin-top:8px">Ask citizens what they like, then talk about it for a big friendship boost. Ask about their life to learn who their friends, rivals and partners are. Chat and joke to build friendship. At Honored you can flirt, give flowers and go on dates. Date someone, buy a ring, propose, and start a family (or adopt at the Orphanage).</p>');
 }
 function openAch(){
  S.panel='ach';const got=Object.keys(p.ach).length;
@@ -2076,14 +2175,14 @@ const TEX={
  rose:ctex((g,s)=>{g.fillStyle='#1d2a55';g.fillRect(0,0,s,s);const cx=s/2;for(let i=0;i<12;i++){g.fillStyle=['#e8c040','#c03a3a','#3a6ad0','#4fae5a'][i%4];g.beginPath();g.moveTo(cx,cx);g.arc(cx,cx,s*.48,i/12*Math.PI*2,(i+.8)/12*Math.PI*2);g.fill();}g.fillStyle='#f8e08a';g.beginPath();g.arc(cx,cx,s*.14,0,7);g.fill();g.strokeStyle='#2b1d12';g.lineWidth=6;g.beginPath();g.arc(cx,cx,s*.48,0,7);g.stroke();}),
  swirl:ctex((g,s)=>{g.fillStyle='#000';g.fillRect(0,0,s,s);g.translate(s/2,s/2);for(let i=0;i<220;i++){const a=i*.25,r=i*.55;g.fillStyle=`hsla(${265+i%40},90%,${40+i%30}%,.7)`;g.beginPath();g.arc(Math.cos(a)*r,Math.sin(a)*r,4+i*.03,0,7);g.fill();}}),
 };
-TEX.roofBlue=TEX.roof('#2c4f9e');TEX.roofDark=TEX.roof('#3a3440');TEX.roofPurple=TEX.roof('#5b3fa0');TEX.roofBrown=TEX.roof('#7a4a2a');TEX.roofGray=TEX.roof('#6a6e78');
+TEX.roofBlue=TEX.roof('#2c4f9e');TEX.roofDark=TEX.roof('#3a3440');TEX.roofPurple=TEX.roof('#5b3fa0');TEX.roofBrown=TEX.roof('#7a4a2a');TEX.roofGray=TEX.roof('#6a6e78');TEX.roofPink=TEX.roof('#b8457e');
 const std=(map,o={})=>new THREE.MeshStandardMaterial({map,roughness:.9,metalness:0,...o});
 const MAT={
  grass:std(TEX.grass),cobble:std(TEX.cobble),slab:std(TEX.slab),wood:std(TEX.wood),stone:std(TEX.stone),darkStone:std(TEX.darkStone),citywall:std(TEX.citywall),canal:std(TEX.canal),
  timber:std(TEX.timber,{emissive:0xffffff,emissiveMap:TEX.timberE,emissiveIntensity:0}),
  stoneWin:std(TEX.stoneWin,{emissive:0xffffff,emissiveMap:TEX.stoneWinE,emissiveIntensity:0}),
  marble:std(TEX.marble,{roughness:.5}),arcane:std(TEX.arcane,{roughness:.6}),dark:std(TEX.dark),sand:std(TEX.sand),rock:std(TEX.rock),plank:std(TEX.plank),
- roof:{blue:std(TEX.roofBlue,{side:THREE.DoubleSide}),dark:std(TEX.roofDark,{side:THREE.DoubleSide}),purple:std(TEX.roofPurple,{side:THREE.DoubleSide}),brown:std(TEX.roofBrown,{side:THREE.DoubleSide}),gray:std(TEX.roofGray,{side:THREE.DoubleSide})},
+ roof:{blue:std(TEX.roofBlue,{side:THREE.DoubleSide}),dark:std(TEX.roofDark,{side:THREE.DoubleSide}),purple:std(TEX.roofPurple,{side:THREE.DoubleSide}),brown:std(TEX.roofBrown,{side:THREE.DoubleSide}),gray:std(TEX.roofGray,{side:THREE.DoubleSide}),pink:std(TEX.roofPink,{side:THREE.DoubleSide})},
  water:new THREE.MeshStandardMaterial({map:TEX.water,color:0x9fd0f0,roughness:.12,metalness:.25,transparent:true,opacity:.86}),
  sea:new THREE.MeshStandardMaterial({map:TEX.water,color:0x6aa8d8,roughness:.15,metalness:.3,transparent:true,opacity:.9}),
  canalBottom:new THREE.MeshStandardMaterial({color:0x2a3a30,roughness:1}),
@@ -2529,6 +2628,34 @@ function makePet(race){
  return {group:g,proc:true,play(){},mixer:null,pet:race};
 }
 
+// the posse's non-humanoid members: Princess Donut (a Persian show cat with a tiara) and Mongo (a dinosaur)
+function makeBeast(kind){
+ const M=c=>new THREE.MeshStandardMaterial({color:c,roughness:.85});
+ if(kind==='donut'){const m=makePet('cat'),g=m.group,recol={0xe0903a:0xf4ece0,0xb86a20:0xd9c6ae,0xf6e6d0:0xffffff};
+  g.traverse(o=>{if(o.isMesh&&o.material.isMeshStandardMaterial){const c=recol[o.material.color.getHex()];if(c!=null)o.material.color.setHex(c);}});
+  for(const [x,y,z,r] of [[0,.42,.08,.17],[0,.32,.2,.12],[0,.4,-.15,.15]]){const f=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),M(0xffffff));f.position.set(x,y,z);g.add(f);}
+  const gold=new THREE.MeshStandardMaterial({color:0xffd34a,metalness:.6,roughness:.3});
+  const band=new THREE.Mesh(new THREE.TorusGeometry(.085,.016,6,16,Math.PI),gold);band.position.set(0,.55,.27);g.add(band);
+  for(const sx of [-.05,0,.05]){const c=new THREE.Mesh(new THREE.ConeGeometry(.018,sx?.06:.09,4),gold);c.position.set(sx,.64+(sx?0:.015),.27);g.add(c);}
+  const gem=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),new THREE.MeshBasicMaterial({color:0xff5fb0}));gem.position.set(0,.62,.29);g.add(gem);
+  g.scale.set(1.8,1.6,1.6);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});return m;}
+ const g=new THREE.Group(),skin=M(0x6f8f4a),belly=M(0xd2c48e),dark=M(0x46602e);
+ const add=(geo,mat,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>{const k=new THREE.Mesh(geo,mat);k.position.set(x,y,z);k.rotation.set(rx,ry,rz);k.scale.set(sx,sy,sz);g.add(k);return k;};
+ add(new THREE.CapsuleGeometry(.32,.6,4,10),skin,0,1.05,0,Math.PI/2+.25);
+ add(new THREE.SphereGeometry(.26,10,8),belly,0,.95,.18,0,0,0,1,1,1.3);
+ add(new THREE.CapsuleGeometry(.14,.4,4,8),skin,0,1.4,.45,-.6);
+ add(new THREE.SphereGeometry(.22,12,10),skin,0,1.65,.72,0,0,0,1,.85,1.5);
+ add(new THREE.BoxGeometry(.26,.08,.36),belly,0,1.52,.82);
+ for(const sx of [-1,1]){add(new THREE.SphereGeometry(.045,8,6),new THREE.MeshBasicMaterial({color:0xf3c33a}),sx*.13,1.74,.82);
+  for(const tz of [.92,1.0])add(new THREE.ConeGeometry(.018,.06,4),M(0xffffff),sx*.08,1.56,tz,Math.PI);
+  add(new THREE.CapsuleGeometry(.04,.18,3,6),dark,sx*.2,1.05,.48,.9);}
+ add(new THREE.ConeGeometry(.22,1.4,8),skin,0,1.0,-.95,-Math.PI/2+.15);
+ for(let i=0;i<5;i++)add(new THREE.ConeGeometry(.05,.14,4),dark,0,1.35-i*.06,.3-i*.28);
+ g.legs=[];for(const sx of [-1,1])g.legs.push(add(new THREE.CapsuleGeometry(.1,.55,4,8),dark,sx*.2,.42,0));
+ g.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+ return {group:g,proc:true,play(){},mixer:null,pet:'cat'};
+}
+
 // ---------- props (procedural) ----------
 const PROC={
  cryptdoor(){const g=new THREE.Group();g.add(meshAt(new THREE.BoxGeometry(4,.3,3),MAT.darkStone,0,.15,0));for(const sx of [-1.6,1.6])g.add(meshAt(new THREE.BoxGeometry(.7,3,.7),MAT.stone,sx,1.5,0));g.add(meshAt(new THREE.BoxGeometry(4,.8,.9),MAT.stone,0,3.2,0));g.add(meshAt(new THREE.BoxGeometry(2.4,2.6,.1),new THREE.MeshBasicMaterial({color:0x050308}),0,1.3,.05));
@@ -2647,7 +2774,7 @@ function buildDecor(){
  for(const b of BUILD){const n0=scene.children.length;for(const ds of b.doorSides||[]){
   const out=.45,base=ds.ax==='x'?{x:0,z:ds.f+ds.n[1]*out}:{x:ds.f+ds.n[0]*out,z:0};const rot=Math.atan2(ds.n[0],ds.n[1])*180/Math.PI;
   for(const sg of [-1,1]){const along=ds.c+sg*(ds.w/2+.9);const px=ds.ax==='x'?along:base.x,pz=ds.ax==='x'?base.z:along;
-   if(b.id==='lamb'||b.id==='si7')placeModel('dun/banner_patternA_red',{x:px,z:pz,fitH:2.2,alignTop:Math.min(b.hgt-.4,4.6),rot});else lionBanner(px,Math.min(b.hgt-.6,5.6)-1.5,pz,rot*Math.PI/180,1.3,2.9);
+   if(b.id==='lamb'||b.id==='si7'||b.id==='posse')placeModel('dun/banner_patternA_red',{x:px,z:pz,fitH:2.2,alignTop:Math.min(b.hgt-.4,4.6),rot});else lionBanner(px,Math.min(b.hgt-.6,5.6)-1.5,pz,rot*Math.PI/180,1.3,2.9);
    const tx=ds.ax==='x'?ds.c+sg*(ds.w/2+.25):px,tz=ds.ax==='x'?pz:ds.c+sg*(ds.w/2+.25);
    placeModel('dun/torch_mounted',{x:tx,z:tz,fitH:.7,alignTop:2.8,rot});}
   // barrels & crates by the door
@@ -2723,9 +2850,9 @@ function showMarker(x,y){if(!marker){marker=new THREE.Mesh(new THREE.RingGeometr
 // avatars for NPCs & player
 // =====================================================================
 function makeNpcAvatar(n){
- n.av=n.race==='murloc'?makeMurloc(1):makeAvatar({model:n.model,race:n.race,gear:n.gear,armor:n.armor,kid:n.kid});
+ n.av=n.beast?makeBeast(n.beast):n.race==='murloc'?makeMurloc(1):makeAvatar({model:n.model,race:n.race,gear:n.gear,armor:n.armor,kid:n.kid});
  const cap=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,n.kid?1.3:2.1,8),MAT.pick);cap.position.y=n.kid?.65:1.05;cap.userData.npc=n;n.av.group.add(cap);pickables.push(cap);
- scene.add(n.av.group);n.label=mkLabel();n.headH=n.race==='murloc'?1.35:n.kid?1.35:2.15*(raceVis(n.race).scale||1);
+ scene.add(n.av.group);n.label=mkLabel();n.headH=n.beast==='mongo'?2.3:n.beast?1.3:n.race==='murloc'?1.35:n.kid?1.35:2.15*(raceVis(n.race).scale||1);
 }
 let rod=null;
 function rebuildPlayer(){
@@ -3550,6 +3677,7 @@ const INDRESS=[
 ];
 const PEWS=[[63,24],[63,26.5],[73.5,21],[73.5,24],[73.5,26.5]];
 const BRAZIERS=[[98,74],[106,74],[100,85-1],[104,84],[62,15],[73,15],[17,60],[17,66]];
+INDRESS.push(['fur/rug_oval_A',80,81,3.2],['dun/keg_decorated',77,78,.9],['dun/coin_stack_large',84,78,.5],['fur/lamp_standing',77,83,.7],['dun/banner_patternA_red',80,83,2,180],['dun/banner_patternA_red',82,83,2,180],['dun/candle_triple',81,79,.4]);
 for(const d of DRESS)ASSET_KEYS.add(d[0]);for(const d of INDRESS)ASSET_KEYS.add(d[0]);
 async function boot(){
  try{
