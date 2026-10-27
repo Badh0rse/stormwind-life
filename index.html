@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="assets/fonts.css" rel="stylesheet">
 <style>
+#volpop{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);z-index:80;background:linear-gradient(#1d1710,#120e09);border:2px solid #8a6a2a;border-radius:8px;padding:12px 16px 10px;color:#f0e0b0;box-shadow:0 6px 24px rgba(0,0,0,.6);min-width:250px;font-size:13px}
+#volpop h4{margin:0 0 8px;font-family:Cinzel,Georgia,serif;color:#ffd100;font-size:14px;letter-spacing:.06em}
+#volpop label{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:8px;margin:6px 0}
+#volpop input[type=range]{width:100%;accent-color:#e0b040}
+#volpop .vrow{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
 :root{--gold:#ffd100;--gold2:#c9a24a;--panel:rgba(14,11,8,.9);--edge:#8a6a2c;--parch:#efe0b9;--ink:#2b1d0e}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none;-webkit-user-select:none}
@@ -284,7 +289,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;fon
     <div class="slot" id="b-friends" data-tip="<b>Relationships</b> (F)"><span class="key">F</span>💕</div>
     <div class="slot" id="b-ach" data-tip="<b>Achievements</b> (Y)"><span class="key">Y</span>🏆</div>
     <div class="slot" id="b-save" data-tip="<b>Saves</b><br>Save, back up, export or import your game.">💾</div>
-    <div class="slot" id="b-sound" data-tip="<b>Sound on/off</b>">🔊</div>
+    <div class="slot" id="b-sound" data-tip="<b>Volume</b><br>Master, music and sound effects">🔊</div>
     <div class="slot" id="b-music" data-tip="<b>Music on/off</b><br>CC0 orchestral tracks from OpenGameArt.org">🎵</div>
     <div class="slot" id="b-ui" data-tip="<b>Edit UI layout</b> (U)<br>Drag any panel to move it, drag the yellow corner to resize.">🖉</div>
     <div class="slot" id="b-help" data-tip="<b>How to play</b>">❓</div>
@@ -524,7 +529,7 @@ const CLASSES={
 const ARMORS=['#ffffff','#5b8cff','#d64a3a','#4fae5a','#a46be0','#f0c040','#555555','#e08a3a'];
 const NEEDS=[['hunger','Hunger','🍗','#e8893a'],['energy','Energy','⚡','#3fbf5a'],['hygiene','Hygiene','🛁','#3fb6d9'],['social','Social','💬','#b36be0'],['fun','Fun','🎲','#e8c43a'],['sanity','Sanity','🧠','#5fd0c8']];
 const NICON=Object.fromEntries(NEEDS.map(n=>[n[0],n[2]]));
-const DECAY={hunger:2.6,energy:2.4,hygiene:1.8,social:2,fun:2.3,sanity:.5};
+const DECAY={hunger:1.3,energy:1.2,hygiene:.9,social:1,fun:1.15,sanity:.3};   // per in-game hour; halved 2026-10-28 (needs dropped too fast)
 const SLEEPMULT={hunger:.4,energy:0,hygiene:.5,social:.15,fun:.15,sanity:0};
 const QC=['#9d9d9d','#ffffff','#1eff00','#0070dd','#a335ee','#ff8000'];
 const ITEMS={
@@ -818,7 +823,7 @@ const CHAINS={
 };
 const QCAP=5;
 const chainStep=k=>{const C=CHAINS[k],i=(p.chains||{})[k]||0;return i<C.steps.length?{...C.steps[i],id:'c_'+k,chain:k,giver:C.giver,n:0}:null;};
-function chainOffer(n){if(!p)return null;for(const k in CHAINS)if(CHAINS[k].giver===n.name&&!p.quests.some(q=>q.chain===k)){const st=chainStep(k);if(st)return st;}return null;}
+function chainOffer(n){if(!p)return null;for(const k in CHAINS)if(CHAINS[k].giver===n.name&&(!CHAINS[k].posse||p.flags.posse)&&!p.quests.some(q=>q.chain===k)){const st=chainStep(k);if(st)return st;}return null;}
 const J={
  study:['You read 40 pages about the Arcane. You now know slightly more than a gnome toddler.','You learned that polymorphing your landlord is "technically illegal."','You fell asleep on a book about ley lines. Drool is not a reagent.'],
  ah:['Someone listed a single Linen Cloth for 500 gold. Bold strategy.','You got undercut by one copper. It felt personal.','A goblin tried to sell you your own fish.'],
@@ -1213,11 +1218,11 @@ const NPCDEF=[
  {name:'Bruno Barrelchest',race:'human',model:'Barbarian',gear:[],armor:'#e08a3a',zone:'Old Town'},
  {name:'Grgl',race:'murloc',harbor:true},
  {name:'Doomsayer Ezekiel',race:'human',model:'Mage',gear:['Spellbook_open'],armor:'#555555',post:[47,64],doomsayer:true},
- {name:'Carl',race:'human',model:'Barbarian',gear:[],armor:'#6b4a2e',hall:true,kind:'Crawler · Pants Optional',lines:['I am not wearing pants. We are not discussing it.','Goddamn kobolds.','You will not break me. You will not break ME.','Don\'t touch the crate. I put some of my best work in that crate.','Donut, get off the table.','Kicking is a whole fighting style. Look it up.']},
- {name:'Princess Donut',race:'murloc',beast:'donut',icon:'😼',kind:'Persian Show Cat · Guild Leader',hall:true,lines:['I am Princess Donut, Grand Champion. You may admire me.','CARL! Carl, someone is talking to me.','My fans adore me. Have you followed me? You should follow me.','Mongo, NO. Spit that out.','A princess does not do quests. A princess hands out quests.','This guild hall needs more pillows and fewer Carls.']},
- {name:'Mongo',race:'murloc',beast:'mongo',icon:'🦖',kind:'Dinosaur · Very Good Boy',hall:true,lines:['RAWR! (He is trying to help.)','*Mongo sniffs your pockets for snacks*','*happy dinosaur chirp*','*Mongo knocks over a chair with his tail and looks very proud*']},
- {name:'Katia',race:'human',model:'Knight',gear:['Round_Shield'],armor:'#8a8a9a',hall:true,kind:'Crawler · Tank',lines:['Someone in this guild has to have a plan. It is me.','I tank. You stand behind me. That is the plan.','Carl, the explosives go OUTSIDE.','Welcome to the Posse. Wipe your feet.']},
- {name:'Mordecai',race:'human',model:'Mage',gear:['Spellbook_open'],armor:'#4a3a5a',hall:true,kind:'Game Guide · Guild Manager',lines:['Rule one: don\'t die. Rule two: see rule one.','Rest in a safe room. Heal up. Then go do something stupid.','The viewers love drama. Try not to give them too much.','Take the quest. Get the box. Open the box.','I have guided a lot of crawlers. You are... one of them.']},
+ {name:'Carl',race:'human',model:'Barbarian',gear:[],armor:'#6b4a2e',hall:true,kind:'Crawler · Pants Optional',lines:['I am not wearing pants. We are not discussing it.','Goddamn kobolds.','You will not break me. You will not break ME.','Don\'t touch the crate. I put some of my best work in that crate.','Donut, get off the table.','Kicking is a whole fighting style. Look it up.','Pants are a construct.','Every time I close my eyes I hear a cat say my name. Because she is.','If the crate starts ticking, run. If it stops ticking, run faster.']},
+ {name:'Princess Donut',race:'murloc',beast:'donut',icon:'😼',kind:'Persian Show Cat · Guild Leader',hall:true,lines:['I am Princess Donut, Grand Champion. You may admire me.','CARL! Carl, someone is talking to me.','My fans adore me. Have you followed me? You should follow me.','Mongo, NO. Spit that out.','A princess does not do quests. A princess hands out quests.','This guild hall needs more pillows and fewer Carls.','I have 400 fans. Fine, 4. But they are VERY loud.','If you see a mirror, tell it I said hello.','Mongo, we do not eat the guild members. We have talked about this.','My tiara is not crooked. The WORLD is crooked.']},
+ {name:'Mongo',race:'murloc',beast:'mongo',icon:'🦖',kind:'Dinosaur · Very Good Boy',hall:true,lines:['RAWR! (He is trying to help.)','*Mongo sniffs your pockets for snacks*','*happy dinosaur chirp*','*Mongo knocks over a chair with his tail and looks very proud*','*Mongo is chewing a training dummy. It was not a chew toy.*','RAWR RAWR! (He wants a fish. He always wants a fish.)']},
+ {name:'Katia',race:'human',model:'Knight',gear:['Round_Shield'],armor:'#8a8a9a',hall:true,kind:'Crawler · Tank',lines:['Someone in this guild has to have a plan. It is me.','I tank. You stand behind me. That is the plan.','Carl, the explosives go OUTSIDE.','Welcome to the Posse. Wipe your feet.','I am the only one here who reads the quest text.','I made a plan. Carl set it on fire. I made another plan.']},
+ {name:'Mordecai',race:'human',model:'Mage',gear:['Spellbook_open'],armor:'#4a3a5a',hall:true,kind:'Game Guide · Guild Manager',lines:['Rule one: don\'t die. Rule two: see rule one.','Rest in a safe room. Heal up. Then go do something stupid.','The viewers love drama. Try not to give them too much.','Take the quest. Get the box. Open the box.','I have guided a lot of crawlers. You are... one of them.','Eat something. Sleep somewhere. Hit things. That is the whole job.','Open your Fan Boxes. The sponsors get grumpy otherwise.']},
  {name:'Mrgl the Lost',race:'murloc'},
 ];
 const ZT={};const zoneTiles=z=>ZT[z]||(ZT[z]=roadTiles.filter(t=>zoneAt(t.x,t.y)===z));
@@ -1244,7 +1249,8 @@ const SFXL={step_stone:R5('footstep_concrete'),step_wood:R5('footstep_wood'),ste
  punch:['impactPunch_heavy_000','impactPunch_heavy_001','impactPunch_medium_000'],plate:['impactPlate_medium_000','impactPlate_medium_001'],slice:['knifeSlice','knifeSlice2'],draw:['drawKnife1','drawKnife2'],chop:['chop'],
  thud:['impactSoft_heavy_000'],land:['impactSoft_medium_000'],wood:['impactWood_heavy_000','impactWood_heavy_001'],bell:['impactBell_heavy_000','impactBell_heavy_001','impactBell_heavy_002'],
  latch:['metalLatch'],click2:['metalClick'],creak:['creak1','creak3'],pot:['metalPot1','metalPot2'],cloth:['cloth1','cloth2'],mining:['impactMining_000'],glass:['impactGlass_light_000'],tin:['impactTin_medium_000']};
-const SFXC={};let SFXVOL=.8;
+const VOL={master:.6,music:.5,sfx:.7};try{Object.assign(VOL,JSON.parse(localStorage.getItem('stormwindLife3d.vol')||'{}'));}catch(e){}
+const SFXC={};let SFXVOL=VOL.master*VOL.sfx;
 for(const L of Object.values(SFXL))for(const f of L){const a=new Audio('sfx/'+f+'.ogg');a.preload='auto';SFXC[f]=a;}
 function sfx(name,vol=1,rate){if(S.muted)return;const L=SFXL[name];if(!L)return;const base=SFXC[pick(L)];if(!base)return;
  try{const a=base.cloneNode();a.volume=clamp(vol*SFXVOL*(S.diving?.75:1),0,1);a.preservesPitch=false;a.mozPreservesPitch=false;a.playbackRate=(rate||rand(.92,1.08))*(S.diving?.85:1);a.play().catch(()=>{});}catch(e){}}
@@ -1256,7 +1262,7 @@ function snd(type){
  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){return;}
  const seq={click:[[660,.05]],coin:[[988,.07],[1319,.12]],ach:[[523,.1],[659,.1],[784,.1],[1047,.3]],hearth:[[392,.15],[523,.15],[784,.35]],err:[[180,.12]],lvl:[[784,.08],[988,.08],[1175,.22]],loot:[[880,.06],[1100,.08]]}[type];
  if(!seq)return;let t=AC.currentTime;
- for(const [f,d] of seq){const o=AC.createOscillator(),gn=AC.createGain();o.type=type==='err'?'square':'triangle';o.frequency.value=f;gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.1,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gn).connect(AC.destination);o.start(t);o.stop(t+d+.03);t+=d*.8;}
+ for(const [f,d] of seq){const o=AC.createOscillator(),gn=AC.createGain();o.type=type==='err'?'square':'triangle';o.frequency.value=f;gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(Math.max(.0002,.1*VOL.master*VOL.sfx),t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gn).connect(AC.destination);o.start(t);o.stop(t+d+.03);t+=d*.8;}
 }
 const AMB={on:false,stepT:0,birdT:2,gullT:5};
 function startAmbience(){
@@ -1264,7 +1270,7 @@ function startAmbience(){
  if(AMB.on)return;AMB.on=true;
  const len=AC.sampleRate*3,buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);let last=0;
  for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.02*w)/1.02;d[i]=w*.5+last*3;}
- AMB.buf=buf;AMB.master=AC.createGain();AMB.master.gain.value=.9;AMB.master.connect(AC.destination);
+ AMB.buf=buf;AMB.master=AC.createGain();AMB.master.gain.value=.9*VOL.master*VOL.sfx;AMB.master.connect(AC.destination);
  const bed=(type,freq,q)=>{const s=AC.createBufferSource();s.buffer=buf;s.loop=true;s.playbackRate.value=rand(.9,1.1);const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=AC.createGain();g.gain.value=0;s.connect(f).connect(g).connect(AMB.master);s.start();return g;};
  AMB.wind=bed('lowpass',380,.5);AMB.water=bed('bandpass',1100,.6);AMB.crowd=bed('bandpass',420,1.6);AMB.sea=bed('lowpass',600,.4);
 }
@@ -1756,6 +1762,7 @@ function npcActs(n){
   {label:'Share a Calming Drink (3g)',cost:3,mins:20,gain:{sanity:6,social:10},anim:'Use_Item',done(){n.san=clamp(n.san+15,0,100);relUp(n,4);say(n,'...that helps. Cheers.');}});
  if(n.name==='Sister Amelia')acts.push({label:'Seek Counsel',mins:45,gain:{sanity:45,social:10},tag:['sanity'],anim:'Sit_Floor_Idle',done(){ach('counsel');say(n,'Whatever comes, you are not alone. The Light remembers everyone.');}});
  if(n.race==='murloc')acts.push({label:'Give a Fish',mins:5,req:()=>rawId()?null:'You need a raw fish.',done(){takeItem(rawId());p.needs.fun=clamp(p.needs.fun+30,0,100);relUp(n,25);say(n,n.beast==='donut'?'Fish? For ME? ...I will allow it.':n.beast==='mongo'?'*CHOMP* (The fish is gone. So is part of your sleeve.)':'MRGLGLGL!! ♥');if(!n.beast)ach('murloc');}});
+ if(n.beast==='donut'&&!p.flags.posse)acts.unshift({label:'Join the Princess Posse',mins:5,anim:'Cheer',done(){joinPosse();}});
  if(n.beast==='donut')acts.push({label:'Compliment the Princess',mins:10,gain:{social:12,fun:8},xp:['charisma',4],anim:'Idle',done(){relUp(n,8);say(n,pick(['Obviously.','I know. But thank you for noticing.','Carl! Did you hear that? Write it down.','You have excellent taste. Unlike Carl.']));}});
  if(n.beast==='mongo')acts.push({label:'Pet Mongo',mins:10,gain:{fun:20,sanity:8},tag:['fun'],anim:'Interact',done(){relUp(n,8);say(n,pick(['*happy chirp*','*Mongo licks your whole face*','RAWR! (affectionately)','*his tail wag knocks over a stool*']));}});
  if(n.kid&&!n.child)acts.push({label:'Give 1 Gold',cost:1,mins:2,done(){relUp(n,8);say(n,'Thanks! I\'m saving up for a mount!');}});
@@ -1881,6 +1888,17 @@ function posseDone(q){
  chat(`😼 <i>"${pick(['Adequate. The fans will love it.','CARL! Did you see that? Of course you did not.','That was almost as good as something I would do.','Mongo is very proud of you. I am... also fine with it.'])}"</i> — Princess Donut`,'say');
  const r=posseRank();if(r!==before){chat(`👑 Princess Posse rank up: <b>${r[1]}</b>! Katia pins a slightly crooked badge on you.`,'ach');prepAdd('ally',5,'guild');}
  if(G.rep>=POSSE_RANKS[POSSE_RANKS.length-1][0])ach('posseFav');}
+function joinPosse(){if(p.flags.posse)return;p.flags.posse=1;posse();
+ const N=nm=>npcs.find(n=>n.name===nm),lines=[
+  ['Princess Donut','FINALLY. A new recruit. Welcome to the Princess Posse, the greatest guild in all of Stormwind.'],
+  ['Carl','It\'s the only guild in Stormwind run by a cat.'],
+  ['Princess Donut','Carl. I am not "a cat." I am a GRAND CHAMPION.'],
+  ['Katia','Welcome! Three rules: no fire indoors, no fire outdoors, and nobody lets Carl near fire.'],
+  ['Carl','That rule was written about one incident. One.'],
+  ['Mordecai','Here\'s your guild badge. Try not to die. It ruins my paperwork.'],
+  ['Mongo','RAWR! (Mongo licks your new badge. It is yours now. Sort of.)'],
+  ['Princess Donut','And a Fan Box, from your fans. Well, from one fan. It\'s me. Tell NO ONE.']];
+ lines.forEach(([nm,t],k)=>setTimeout(()=>{const n=N(nm);if(n)say(n,t);if(k===lines.length-1){addItem('fanbox',1);qBanner('Welcome to the Princess Posse!','Rank: New Crawler · open your Fan Box in Bags');chat('😼 You joined the <b>Princess Posse</b>! Guild orders are on the Posse Quest Board, and Carl, Donut and Mordecai have storylines for you (yellow <b>!</b>).','ach');}},k*1700));}
 function openFanBox(){
  const G=posse();G.boxes=(G.boxes||0)+1;const r=Math.random();let t;
  if(r<.35){const g=Math.round(rand(25,90));addGold(g);t=`${g} gold from your adoring viewers`;}
@@ -2943,7 +2961,17 @@ function dragWin(win,handleSel){win.addEventListener('pointerdown',e=>{const h=e
 dragWin($('panel'),'.ptitle');dragWin($('divepanel'),'.dp-head');
 $('b-quests').onclick=()=>togglePanel('quests');$('b-prep').onclick=()=>togglePanel('prep');$('b-fish').onclick=()=>togglePanel('fishlog');$('b-ach').onclick=()=>togglePanel('ach');$('b-help').onclick=()=>togglePanel('help');
 $('b-save').onclick=()=>togglePanel('saves');
-$('b-sound').onclick=()=>{S.muted=!S.muted;$('b-sound').childNodes[0].textContent=S.muted?'🔇':'🔊';};
+function applyVol(){SFXVOL=VOL.master*VOL.sfx;MZ.vol=.84*VOL.master*VOL.music;if(AMB.master)AMB.master.gain.value=.9*VOL.master*VOL.sfx;
+ $('b-sound').childNodes[0].textContent=S.muted||VOL.master===0?'🔇':'🔊';try{localStorage.setItem('stormwindLife3d.vol',JSON.stringify(VOL));}catch(e){}}
+function toggleVol(){let el=$('volpop');if(el){el.remove();return;}el=document.createElement('div');el.id='volpop';
+ const row=(k,lab)=>`<label>${lab}<input type="range" min="0" max="100" value="${Math.round(VOL[k]*100)}" data-v="${k}"><span>${Math.round(VOL[k]*100)}%</span></label>`;
+ el.innerHTML='<h4>Volume</h4>'+row('master','Master')+row('music','Music')+row('sfx','Sound Effects')+`<div class="vrow"><button class="btn" id="vmute">${S.muted?'Unmute':'Mute All'}</button><button class="btn" id="vclose">Close</button></div>`;
+ document.body.appendChild(el);
+ el.querySelectorAll('[data-v]').forEach(r=>r.oninput=()=>{VOL[r.dataset.v]=r.value/100;r.nextElementSibling.textContent=r.value+'%';applyVol();});
+ el.querySelectorAll('[data-v]').forEach(r=>r.onchange=()=>{if(r.dataset.v!=='music')sfx('click',.8);});
+ $('vmute').onclick=()=>{S.muted=!S.muted;$('vmute').textContent=S.muted?'Unmute':'Mute All';applyVol();};$('vclose').onclick=()=>el.remove();}
+$('b-sound').onclick=toggleVol;
+document.addEventListener('pointerdown',e=>{const el=$('volpop');if(el&&!el.contains(e.target)&&!$('b-sound').contains(e.target))el.remove();});
 let showBNames=true;
 addEventListener('keydown',e=>{
  if(e.target.tagName==='INPUT'||!S.running)return;
@@ -3031,20 +3059,21 @@ function updateHud(){
 // GETTING STARTED: a guided first 15 minutes for new characters. Systems show up one at a time.
 // =====================================================================
 const TUT=[
- {t:'Good morning, Stormwind!',x:'You rent a tiny room in Old Town. First things first: breakfast. Open your Bags (press B, or the glowing 🎒 button) and eat the Freshly Baked Bread.',hl:'b-bags',ok:()=>p.flags.ate},
- {t:'Step outside',x:'Your needs (hunger, energy, hygiene, social, fun) drain slowly, so keep an eye on the bars top-left. Now head out the door into Old Town. Walk with WASD, click the ground, or use a controller.',go:()=>{const d=HOMEB.doors[0];return {x:d[0]+1.5,y:d[1]+.5,what:'Out the door'};},ok:()=>!inBuilding(HOMEB,Math.floor(p.x),Math.floor(p.y))},
- {t:'The Notice Board',x:'Stormwind runs on odd jobs. Walk to the Notice Board in the Trade District (follow the blue arrow, or press "Show me") and accept a quest.',go:()=>{const b=OBJS.find(o=>o.board);return {x:b.cx,y:b.cy,what:'Notice Board'};},start(){p.board=null;},ok:()=>p.quests.some(q=>!q.chain)||(p.flags.questsDone||0)>0},
- {t:'Gone fishin\'',x:'Your quests now show in the tracker on the right: click one and you walk straight to it. Next, catch a fish at a canal fishing spot. Fish sell at the Auction House and cook into meals.',go:()=>{const o=fishSpotAt('canal');return o?{x:o.cx,y:o.cy,what:'Canal Fishing Spot'}:null;},start(){p.flags.tFish0=p.flags.fishTotal||0;},ok:()=>(p.flags.fishTotal||0)>(p.flags.tFish0||0)},
- {t:'Captain Saltbeard',x:'The real treasure is under the sea. Head to the harbor (north past the Cathedral) and talk to Captain Saltbeard. Choose "Go Diving".',go:()=>{const o=objNamed('Captain Saltbeard');return o?{x:o.cx,y:o.cy,what:'Captain Saltbeard'}:null;},ok:()=>S.diving||p.flags.tDived},
- {t:'Your first dive',x:'Grab something down there, then swim back up to the boat and press E to unload.',ok:()=>p.flags.tDived},
- {t:'Whelps over Stormwind!',x:'The bells are ringing: black dragon whelps are attacking! Click a whelp (or face it and press E / Ⓐ) to fight it alongside the guards.',go:()=>S.raid?{x:S.raid.cx/TS,y:S.raid.cz/TS,what:'Whelp attack!'}:null,start(){tutRaid();},ok:()=>!S.raid&&p.flags.tRaid},
+ {t:'Good morning, Stormwind!',x:'A note was slipped under your door: "You have been CHOSEN. Report to the Princess Posse Guild Hall next door. Eat breakfast first. You look weak. — P.D." Open your Bags (press B, or the glowing 🎒 button) and eat the Freshly Baked Bread.',hl:'b-bags',ok:()=>p.flags.ate},
+ {t:'Step outside',x:'Your needs (hunger, energy, hygiene, social, fun) drain slowly, so keep an eye on the bars top-left. Now head out the door into Old Town. Walk with WASD, click the ground, or use a controller. Pants are recommended. Carl disagrees.',go:()=>{const d=HOMEB.doors[0];return {x:d[0]+1.5,y:d[1]+.5,what:'Out the door'};},ok:()=>!inBuilding(HOMEB,Math.floor(p.x),Math.floor(p.y))},
+ {t:'The Princess Posse wants YOU',x:'The pink-roofed guild hall right next door is home to the Princess Posse. Walk in, talk to Princess Donut (the cat in the tiara) and choose "Join the Princess Posse". Do not sit in her chair.',go:()=>{const d=npcs.find(n=>n.name==='Princess Donut');return d?{x:d.x,y:d.y,what:'Princess Donut'}:null;},ok:()=>p.flags.posse},
+ {t:'Guild Orders',x:'Mordecai keeps the Posse Quest Board stocked with jobs. Accept any guild order: every one pays a 🎁 Fan Box. (The Notice Board in the Trade District has even more odd jobs, if you like paperwork.)',go:()=>{const b=objNamed('Posse Quest Board');return b?{x:b.cx,y:b.cy,what:'Posse Quest Board'}:null;},start(){if(p.guild)p.guild.day=null;},ok:()=>p.quests.some(q=>!q.chain)||(p.flags.questsDone||0)>0},
+ {t:'Gone fishin\'',x:'Your quests now show in the tracker on the right: click one and you walk straight to it. Meanwhile, Mongo is hungry. Mongo is always hungry. Catch a fish at a canal fishing spot. Fish sell at the Auction House and cook into meals (and Mongo snacks).',go:()=>{const o=fishSpotAt('canal');return o?{x:o.cx,y:o.cy,what:'Canal Fishing Spot'}:null;},start(){p.flags.tFish0=p.flags.fishTotal||0;},ok:()=>(p.flags.fishTotal||0)>(p.flags.tFish0||0)},
+ {t:'Captain Saltbeard',x:'Katia says the sea is "a bonus level." Head to the harbor (north past the Cathedral) and talk to Captain Saltbeard. Choose "Go Diving". Donut is not coming. Donut does not do wet.',go:()=>{const o=objNamed('Captain Saltbeard');return o?{x:o.cx,y:o.cy,what:'Captain Saltbeard'}:null;},ok:()=>S.diving||p.flags.tDived},
+ {t:'Your first dive',x:'Grab something down there, then swim back up to the boat and press E to unload. Mordecai\'s advice: "Breathe. Seriously. Watch the oxygen."',ok:()=>p.flags.tDived},
+ {t:'Whelps over Stormwind!',x:'The bells are ringing: black dragon whelps are attacking! Donut: "FINALLY, some content." Click a whelp (or face it and press E / Ⓐ) to fight it alongside the guards.',go:()=>S.raid?{x:S.raid.cx/TS,y:S.raid.cz/TS,what:'Whelp attack!'}:null,start(){tutRaid();},ok:()=>!S.raid&&p.flags.tRaid},
 ];
 const tutOn=()=>!!p&&p.flags.tut!=null&&p.flags.tut<TUT.length;
 let tutL=null,tutShown=-1,tutT=0;
 function tutRaid(){if(S.raid)return;let best=RAID_SPOTS[0],bd=1e9;for(const r of RAID_SPOTS){const d=Math.hypot(r[1]-p.x,r[2]+OFF-p.y);if(d<bd){bd=d;best=r;}}startRaid({spot:best,n:3,hp:3});}
 function updateTutorial(){
  const el=$('coach'),on=tutOn(),i=on?p.flags.tut:TUT.length;
- document.body.classList.toggle('tut-hide-doom',on&&i<6);document.body.classList.toggle('tut-hide-track',on&&i<2);
+ document.body.classList.toggle('tut-hide-doom',on&&i<7);document.body.classList.toggle('tut-hide-track',on&&i<3);
  if(!on||S.diving){el.hidden=true;if(tutL)tutL.el.style.display='none';return;}
  const st=TUT[i];
  if(tutShown!==i){tutShown=i;if(st.start)st.start();$('coach-t').textContent=st.t;$('coach-x').textContent=st.x;$('coach-n').textContent=`Getting Started ${i+1}/${TUT.length}`;
@@ -3054,7 +3083,7 @@ function updateTutorial(){
  else{if(tutL)tutL.el.style.display='none';$('coach-d').textContent='';}
  if(st.ok()){p.flags.tut++;tutShown=-1;document.querySelectorAll('.hlpulse').forEach(e=>e.classList.remove('hlpulse'));if(p.flags.tut>=TUT.length)finishTutorial();else qBanner('Step complete!',TUT[p.flags.tut].t);}}
 function finishTutorial(){$('coach').hidden=true;if(tutL)tutL.el.style.display='none';addGold(50);
- qBanner("You're ready!",'+50g · Deathwing returns on the 4th...');
+ qBanner("You're ready!",'+50g · Deathwing returns on the 4th...');{const d=npcs.find(n=>n.name==='Princess Donut');if(d)setTimeout(()=>say(d,'Whelps? Please. Wait until the viewers see the BIG one. Everyone back to the guild hall!'),1500);}
  chat('<b>The whelps were only the beginning.</b> Bar stories say Deathwing himself is stirring beneath the earth, and the doom timer at the top of the screen counts down to his return. Make friends, earn your gold, upgrade your dive gear, and find the Sunken Kingdom beneath the waves before the world ends. (Autopilot AFK mode is in the top-right if you want your sim to live on their own.)','sys');}
 $('coach-go').onclick=()=>{const st=TUT[p.flags.tut],g=st&&st.go&&st.go();if(g){S.lastManual=performance.now();walkNear(g.x,g.y);}};
 $('coach-skip').onclick=()=>{p.flags.tut=TUT.length;$('coach').hidden=true;if(tutL)tutL.el.style.display='none';document.querySelectorAll('.hlpulse').forEach(e=>e.classList.remove('hlpulse'));document.body.classList.remove('tut-hide-doom','tut-hide-track');chat('Tutorial skipped. You can replay it from the ❓ help window.','sys');};
@@ -3744,7 +3773,7 @@ $('start').onclick=()=>{
   needs:{hunger:80,energy:85,hygiene:80,social:65,fun:65,sanity:85},gold:50,bank:0,perks:{},items:{bread:2},xp:{},furni:{},hearth:'home',hearthCd:0,buffs:{},flags:{tut:0},ach:{},task:null,idleSince:S.time,casting:null,babies:[],children:[],quests:[],fishlog:{},chains:{}};
  S.time=1440+8*60;
  snd('hearth');begin();
- chat(`Welcome to Stormwind, ${esc(name)} the ${CLASSES[p.cls].name}! You've rented a tiny room in Old Town.`);
+ chat(`Welcome to Stormwind, ${esc(name)} the ${CLASSES[p.cls].name}! You've rented a tiny room in Old Town, right next door to the loudest guild in Stormwind.`);
  chat('WASD or click to move · drag to look around · E or click to interact · ❓ for help. Follow the blue Getting Started box to learn the ropes.');
 };
 // =====================================================================
@@ -4057,7 +4086,7 @@ function enemyAI(e,dt,dx,dy,dist){
 }
 function diveUpdate(dt){
  DV.t+=dt;DV.diveT=(DV.diveT||0)+dt;
- if(tutOn()&&p.flags.tut>=4&&p.flags.tut<=5&&!DV.paused&&!DV.tutMsg&&DV.diveT>1){DV.tutMsg=1;msg('First dive: harpoon a fish (click) or grab anything glowing,','#9fd5ff');msg('then swim back up to the boat and press E. Watch your oxygen!','#9fd5ff');}
+ if(tutOn()&&p.flags.tut>=5&&p.flags.tut<=6&&!DV.paused&&!DV.tutMsg&&DV.diveT>1){DV.tutMsg=1;msg('First dive: harpoon a fish (click) or grab anything glowing,','#9fd5ff');msg('then swim back up to the boat and press E. Watch your oxygen!','#9fd5ff');}
  for(const f of DV.feed||[])f.t-=dt;if(DV.feed)DV.feed=DV.feed.filter(f=>f.t>0);
  if(!DV.paused&&DV.schools&&DV.d)for(const sc of DV.schools){const dd=Math.hypot(sc.x-DV.d.x,sc.y-DV.d.y);if(dd<220){const a=Math.atan2(sc.y-DV.d.y,sc.x-DV.d.x);sc.tx=sc.x+Math.cos(a)*300;sc.ty=sc.y+Math.sin(a)*200;}else if(Math.hypot(sc.tx-sc.x,sc.ty-sc.y)<40){const s2=spotIn(sc.i,100);sc.tx=s2.x;sc.ty=s2.y;}
   const L=Math.hypot(sc.tx-sc.x,sc.ty-sc.y)||1,sp=dd<220?170:55,nx=sc.x+(sc.tx-sc.x)/L*sp*dt,ny=sc.y+(sc.ty-sc.y)/L*sp*dt;if(inCav(sc.i,nx,ny)){sc.x=nx;sc.y=ny;}else{const s2=spotIn(sc.i,100);sc.tx=s2.x;sc.ty=s2.y;}}
@@ -4509,7 +4538,7 @@ const MUSIC={
  naga:['music/dive_naga_sigil.ogg'],
  kingdom:['music/kingdom_fantasy_choir_1.mp3','music/kingdom_fantasy_choir_2.mp3'],
 };
-const MZ={a:new Audio(),b:new Audio(),cur:null,old:null,cat:null,fade:1,vol:.42,on:true,started:false,last:{}};
+const MZ={a:new Audio(),b:new Audio(),cur:null,old:null,cat:null,fade:1,vol:.84*VOL.master*VOL.music,on:true,started:false,last:{}};
 for(const el of [MZ.a,MZ.b]){el.preload='auto';el.volume=0;el.addEventListener('ended',()=>{if(el===MZ.cur)playCat(MZ.cat);});}
 function musicCat(){
  if(S.diving){const li=DV.d?dzone(DV.d.x,DV.d.y):0;return ['shallows','fel','gnome','naga','naga','kingdom'][li];}
@@ -4538,7 +4567,7 @@ addEventListener('pointerdown',()=>{MZ.started=true;},{capture:true});
 addEventListener('keydown',()=>{MZ.started=true;},{capture:true});
 $('b-music').onclick=()=>{MZ.on=!MZ.on;$('b-music').childNodes[0].textContent=MZ.on?'🎵':'🔕';};
 // console access for testing / modding: window.SW
-window.SW={step:dt=>{update(dt);render3d(dt);},diveStep:dt=>{diveUpdate(dt);diveRender();},passable,findPath,HOMEB,socialTick,updateNpc,startRaid,endRaid,whelps,DV,MZ,startDive,exitDive,get p(){return p;},S,npcs,OBJS,BUILD,cam,world,T,OFF,walkTo,startAction,snapCam,tick,npcActs,openBoard,ev,rollCatch,landFish,pickFish,chainOffer,togglePanel,questAI,buildMask,openSecret,dWater,dzone,TUNNELS,GATES,DL,camera,scene,refreshObjVis,rebuildBlocked};
+window.SW={step:dt=>{update(dt);render3d(dt);},diveStep:dt=>{diveUpdate(dt);diveRender();},passable,findPath,HOMEB,socialTick,updateNpc,startRaid,endRaid,whelps,DV,MZ,startDive,exitDive,get p(){return p;},S,npcs,OBJS,BUILD,cam,world,T,OFF,walkTo,startAction,snapCam,tick,npcActs,openBoard,ev,rollCatch,landFish,pickFish,chainOffer,togglePanel,questAI,buildMask,openSecret,dWater,dzone,TUNNELS,GATES,DL,camera,scene,renderer,refreshObjVis,rebuildBlocked};
 requestAnimationFrame(frame);
 boot();
 </script>
