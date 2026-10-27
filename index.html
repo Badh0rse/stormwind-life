@@ -3627,7 +3627,7 @@ const DV={W:3700,keys:{},mouse:{x:0,y:0},ents:[],shots:[],bolts:[],parts:[],msgs
 let dW=0,dH=0,dS=1,dR=1;
 function dResize(){dW=innerWidth;dH=innerHeight;dR=Math.min(2,devicePixelRatio||1);dcv.width=dW*dR;dcv.height=dH*dR;dcv.style.width=dW+'px';dcv.style.height=dH+'px';darkC.width=dW;darkC.height=dH;dS=dH/760;}
 addEventListener('resize',()=>{if(S.diving)dResize();});
-// six caves joined by tunnels (Buddy's map): Shallows on top, Fel Trench (left) and Gnomish Wreckage (right)
+// six caves joined by tunnels (the designer's sketch): Shallows on top, Fel Trench (left) and Gnomish Wreckage (right)
 // below it and joined to each other, both lead down to the Murloc Grottos, then the Naga Deeps, then the Kingdom.
 // Three secret tunnels (red on the map) open through a quest, by breaking a wall, or by fixing a gnomish lift.
 const DL=[
