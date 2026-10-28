@@ -240,14 +240,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;fon
  #create{width:100vw;align-items:flex-end}
  #races,#classes{grid-template-columns:repeat(2,1fr)}
 }
-#raidhud{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:30;padding:6px 14px;font-size:13px;white-space:nowrap;border-color:#c0402a;box-shadow:0 0 0 1px #000,0 0 16px rgba(255,80,40,.45)}
+#raidhud{position:fixed;left:50%;top:auto;bottom:72px;transform:translateX(-50%);z-index:30;padding:6px 14px;font-size:13px;white-space:nowrap;border-color:#c0402a;box-shadow:0 0 0 1px #000,0 0 16px rgba(255,80,40,.45)}
 #minitip{position:fixed;z-index:120;pointer-events:none;transform:translateX(-100%);background:rgba(12,9,6,.94);border:1px solid #8a6a2a;border-radius:6px;padding:4px 8px;font-size:12px;color:#f0e0b0;white-space:nowrap}#minitip b{color:#ffd100}#minitip span{color:#bbb;font-size:11px}
 /* ---------- phones & tablets ---------- */
 #tjoy,#tbtns,#thint{display:none}
 body.touch #tjoy{display:block;position:fixed;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:128px;height:128px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.10),rgba(0,0,0,.28));border:2px solid rgba(255,209,0,.45);z-index:90;touch-action:none}
 body.touch #tjoy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(#ffe28a,#b8862a);box-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none}
-body.touch #tbtns{display:flex;flex-wrap:wrap-reverse;justify-content:flex-end;gap:10px;position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:150px;z-index:90}
-body.touch #tbtns b{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:24px;line-height:1;background:radial-gradient(#3a2c18,#120d08);border:2px solid #b8862a;color:#ffe9a8;box-shadow:0 3px 10px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none}
+body.touch #tbtns{display:flex;flex-wrap:wrap-reverse;justify-content:flex-end;gap:10px;position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));width:222px;gap:8px;z-index:90}
+body.touch #tbtns b{width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:24px;line-height:1;background:radial-gradient(#3a2c18,#120d08);border:2px solid #b8862a;color:#ffe9a8;box-shadow:0 3px 10px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none}
 body.touch #tbtns b small{font:700 9px system-ui;margin-top:3px;letter-spacing:.04em}
 body.touch #tbtns b:active{transform:scale(.92);background:radial-gradient(#5a4424,#1c140c)}
 body.touch #bar{max-width:calc(100vw - 340px);overflow-x:auto;scrollbar-width:none;bottom:max(12px,env(safe-area-inset-bottom))}
@@ -264,6 +264,8 @@ body.touch #thint[hidden]{display:none}
  body.touch #raidhud{top:auto;bottom:64px;font-size:11px}
  body.touch .slot{width:34px;height:34px;font-size:16px}
  body.touch #chat{height:64px;bottom:84px}
+ body.touch #tbtns{width:186px;gap:6px}
+ body.touch #tbtns b{width:56px;height:56px;font-size:20px}
 }
 @media (max-width:600px){
  body.touch #bar{max-width:calc(100vw - 24px);bottom:160px}
@@ -2296,7 +2298,7 @@ function openSaves(){S.panel='saves';save(false);const cur=localStorage.getItem(
  if($('sv-auto'))$('sv-auto').onclick=()=>{const raw=localStorage.getItem(SAVE_KEY+'.auto'),m=saveMeta(raw);ask(`Load the automatic backup (${m.name}, Day ${m.day})? Your current game will be replaced.`,()=>loadRaw(raw));};}
 function save(manual){
  if(!p)return;
- try{localStorage.setItem(SAVE_KEY,JSON.stringify({time:S.time,freeWill:S.freeWill,p:{...p,task:null,path:[],casting:null,bubble:null,hidden:false,snap:null,av:null,pet:p.pet?{race:p.pet.race}:null,vpet:null,label:null},npc:Object.fromEntries(npcs.filter(n=>!n.child).map(n=>[n.name,{rel:n.rel,love:n.love,status:n.status,san:n.san,aff:n.aff,likes:n.likes,partner:n.partner,pstat:n.pstat,known:n.known,knownF:n.knownF}]))}));if(manual){chat('Game saved.');snd('click');}}
+ try{localStorage.setItem(SAVE_KEY,JSON.stringify({time:S.time,freeWill:S.freeWill,p:{...p,task:null,path:[],casting:null,bubble:null,hidden:false,snap:null,av:null,foe:null,fight:null,cds:{},potCd:0,abilCd:0,pet:p.pet?{race:p.pet.race}:null,vpet:null,label:null},npc:Object.fromEntries(npcs.filter(n=>!n.child).map(n=>[n.name,{rel:n.rel,love:n.love,status:n.status,san:n.san,aff:n.aff,likes:n.likes,partner:n.partner,pstat:n.pstat,known:n.known,knownF:n.knownF}]))}));if(manual){chat('Game saved.');snd('click');}}
  catch(e){if(manual)chat('Could not save: browser storage is blocked.','err');}
 }
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
@@ -3843,11 +3845,13 @@ function updateDungeon(dt){
  if(!p||!S.running||!mobs.length)return;
  if(p.hp==null)p.hp=hpMax();const hm=hpMax(),inD=inDungeon(),ws=S.speed>0?1:0;
  // HUD
- {const show=inD||p.foe||p.hp<hm;$('hprow').hidden=!show;if(show){$('hpfill').style.width=(p.hp/hm*100)+'%';$('hpval').textContent=Math.round(p.hp);}
+ {const show=inD||p.foe||p.fight||p.hp<hm;$('hprow').hidden=!show;if(show){$('hpfill').style.width=(p.hp/hm*100)+'%';$('hpval').textContent=Math.round(p.hp);}
   {const on=inD||!!p.foe||!!p.fight;$('b-pot').hidden=!on;$('potn').textContent=p.items.healpot||0;const L=skills(),now=performance.now();
    L.forEach((sk,i)=>{const el=$(SKSLOT[i]);el.hidden=!on||!knowsSkill(i);if(el.hidden)return;$(SKIC[i]).textContent=sk[0];el.dataset.tip=`<b>${sk[1]}</b> (${SKKEY[i]}${i===0?' / X on a controller':''})<br>${sk[4]} ${sk[3]} second cooldown.`;
     const cd=Math.max(0,((p.cds||{})[i]||0)-now)/(sk[3]*1000);$(SKCD[i]).style.background=cd>0?`conic-gradient(rgba(0,0,0,.7) ${cd*360}deg,transparent 0)`:'none';});}
-  const f=p.foe;$('tframe').hidden=!f;if(f){const D=MOBDEF[f.type];$('tname').innerHTML=`<span>${esc(D.name)}${D.boss?' 💀':''}</span><small>Level ${D.lvl}${D.boss?' Elite':''}</small>`;$('tfill').style.width=Math.max(0,f.hp/D.hp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(f.hp))} / ${D.hp}`;}}
+  const f=p.foe,wf=!f&&p.fight&&whelps.includes(p.fight)?p.fight:null;$('tframe').hidden=!f&&!wf;
+  if(wf){$('tname').innerHTML=`<span>${wf.boss?'Black Drake Broodmother 💀':'Black Dragon Whelp'}</span><small>${wf.boss?'Level 10 Elite':'Level 5'}</small>`;$('tfill').style.width=Math.max(0,wf.hp/wf.maxhp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(wf.hp))} / ${wf.maxhp}`;}
+  if(f){const D=MOBDEF[f.type];$('tname').innerHTML=`<span>${esc(D.name)}${D.boss?' 💀':''}</span><small>Level ${D.lvl}${D.boss?' Elite':''}</small>`;$('tfill').style.width=Math.max(0,f.hp/D.hp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(f.hp))} / ${D.hp}`;}}
  // out-of-combat regen
  const inCombat=performance.now()-(p.lastHit||0)<5000||!!p.foe;if(!inCombat&&p.hp<hm)p.hp=Math.min(hm,p.hp+hm*.08*dt);
  if(p.atkT>0)p.atkT-=dt;
@@ -3873,7 +3877,7 @@ function updateDungeon(dt){
     if(m.cd<=0){m.cd=D.ranged?2.2:1.6;m.av.play(D.ranged?'Spellcast_Shoot'in m.av.actions?'Spellcast_Shoot':'1H_Melee_Attack_Chop':'1H_Melee_Attack_Chop',.05);m.hitT=.5;
      if(D.ranged)sparkle(p.x,p.y,D.boss?0x9a4aff:0x7ab0ff,10);const n=Math.round(D.dmg*rand(.8,1.2));hurtPlayer(n,m);if(!p.foe&&!p.task)p.foe=m;}}}
   // nameplate
-  if(placeLabel(m.lbl,wx(m.x),2.3*D.scale+.4,wz(m.y),40)){m.lbl.nm.textContent=`${D.name}${D.boss?' 💀':''}`;m.lbl.hb.style.width=Math.max(0,m.hp/D.hp*100)+'%';}}
+  if(placeLabel(m.lbl,wx(m.x),2.3*D.scale+.4,wz(m.y),40)){m.lbl.nm.textContent=`${D.name}${D.boss?' 💀':''}`;m.lbl.nm.style.color=D.passive&&m.state==='idle'?'#ffd100':'';m.lbl.hb.style.width=Math.max(0,m.hp/D.hp*100)+'%';}}
  // you vs. your target
  const f=p.foe;if(f&&!f.dead){const d=Math.hypot(f.x-p.x,f.y-p.y),rng=RANGED_CLS.includes(p.cls)?6:1.7;dungT-=dt;
   if(d>rng){if(!S.keysDown&&dungT<=0&&!p.path.length){dungT=.5;let best=null,bd=1e9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const tx=Math.floor(f.x)+dx,ty=Math.floor(f.y)+dy;if(passable(tx,ty)){const dd=Math.hypot(tx+.5-p.x,ty+.5-p.y);if(dd<bd){bd=dd;best=[tx,ty];}}}if(best){const pth=findPath(Math.floor(p.x),Math.floor(p.y),(x,y)=>x===best[0]&&y===best[1],best[0],best[1],9000);if(pth)p.path=pth;}}}
@@ -4145,7 +4149,7 @@ function openCreate(){
 function begin(){
  $('create').hidden=true;$('hud').hidden=false;
  if(preview.av){scene.remove(preview.av.group);preview.av=null;}
- p.cls=p.cls||'warrior';if(p.needs.sanity==null)p.needs.sanity=80;p.babies=p.babies||[];p.children=p.children||[];p.quests=p.quests||[];p.fishlog=p.fishlog||{};p.chains=p.chains||{};p.flags=p.flags||{};p.yaw=p.yaw||0;
+ p.cls=p.cls||'warrior';p.cds={};p.potCd=0;p.abilCd=0;p.foe=null;p.fight=null;p.shield=0;p.hot=null;if(p.needs.sanity==null)p.needs.sanity=80;p.babies=p.babies||[];p.children=p.children||[];p.quests=p.quests||[];p.fishlog=p.fishlog||{};p.chains=p.chains||{};p.flags=p.flags||{};p.yaw=p.yaw||0;
  if(p.cls==='hunter'||p.cls==='warlock'){const r=p.cls==='hunter'?'wolf':'imp';p.pet={race:r,isPet:true,x:p.x-.6,y:p.y+.3,yaw:0,moving:false};}else p.pet=null;
  p.perks=p.perks||{};p.vpet=p.vpetRace?{race:p.vpetRace,isPet:true,x:p.x+.6,y:p.y+.3,yaw:0,moving:false}:null;
  for(const c of p.children)if(!npcs.some(n=>n.child&&n.name===c.name))spawnChild(c);
