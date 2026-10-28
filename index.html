@@ -559,7 +559,7 @@ const RACES={
  draenei:{name:'Draenei',perk:'Gift of the Naaru: Cathedral actions are twice as effective.',tint:'#7c9cff',scale:1.12},
  worgen:{name:'Worgen',perk:'Running Wild: move 40% faster.',tint:'#9b928a',scale:1.12},
 };
-const RACE_EXTRA={goblin:{tint:'#9fe07a',scale:.66,headScale:1.25},murloc:{scale:1}};
+const RACE_EXTRA={goblin:{tint:'#9fe07a',scale:.66,headScale:1.25},murloc:{scale:1},kobold:{tint:'#a07a52',scale:1,headScale:1.1}};
 const CLASSES={
  warrior:{name:'Warrior',color:'#C69B6D',icon:'⚔️',perk:'+50% Combat XP and +15% guard pay.',model:'Knight',gear:['2H_Sword']},
  paladin:{name:'Paladin',color:'#F48CBA',icon:'🔨',perk:'Cathedral actions are 50% more effective.',model:'Knight',gear:['1H_Sword','Badge_Shield']},
@@ -2727,7 +2727,7 @@ function makeAvatar(look){
  for(const c of src.clips)actions[c.name]=mixer.clipAction(c);
  const av={group:grp,root:o,mixer,actions,cur:null,
   play(n,fade=.22){if(this.cur===n)return;const a=this.actions[n]||this.actions.Idle;if(!a)return;const prev=this.cur&&this.actions[this.cur];a.reset();a.setLoop(n.startsWith('Jump')?THREE.LoopOnce:THREE.LoopRepeat);a.clampWhenFinished=true;a.fadeIn(fade).play();if(prev&&prev!==a)prev.fadeOut(fade);this.cur=n;}};
- av.headBone=o.getObjectByName('head');av.headScale=(RV.headScale||1)*(look.kid?1.18:1);
+ av.headBone=headBone(o,headMesh(o))||o.getObjectByName('head');av.headScale=(RV.headScale||1)*(look.kid?1.18:1);
  av.tick=dt=>{av.mixer.update(dt);if(av.headBone&&av.headScale!==1)av.headBone.scale.setScalar(av.headScale);};
  av.play('Idle',0);av.tick(0);
  return av;
@@ -2785,6 +2785,13 @@ function raceFeatures(o,race,armor,body){
   for(const sg of [-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(s.x*.1,s.y*.75,8),hornM);along(h,V(c.x+sg*s.x*.36,c.y+s.y*.3,c.z+s.z*.05),V(sg*.55,.8,-.55),s.y*.75);}
   for(const sg of [-1,1]){const t=new THREE.Mesh(new THREE.CylinderGeometry(s.x*.05,s.x*.02,s.y*.5,6),skin);along(t,V(c.x+sg*s.x*.15,c.y-s.y*.42,c.z+s.z*.35),V(sg*.15,-1,.25),s.y*.5);}
   if(hips&&hipPos){const t=new THREE.Mesh(new THREE.CylinderGeometry(s.x*.03,s.x*.09,s.y*1.6,8),skin);along(t,hipPos.clone().add(V(0,-.05,-.15)),V(0,-.6,-1),s.y*1.6,hips);}
+ }
+ if(race==='kobold'){
+  const fur=new THREE.MeshStandardMaterial({color:0x8a6440,roughness:.95}),dark=new THREE.MeshStandardMaterial({color:0x2a1a10});
+  put(new THREE.Mesh(new THREE.ConeGeometry(s.x*.2,s.z*.55,8),fur),V(c.x,c.y-s.y*.14,front+s.z*.2),[Math.PI/2,0,0]);
+  put(new THREE.Mesh(new THREE.SphereGeometry(s.x*.07,8,6),dark),V(c.x,c.y-s.y*.14,front+s.z*.47));
+  for(const sg of [-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(s.x*.2,10,8),fur);e.scale.set(1,1,.35);put(e,V(c.x+sg*W2*.95,c.y+s.y*.32,c.z-s.z*.05),[0,sg*.3,0]);}
+  if(hips&&hipPos){const t=new THREE.Mesh(new THREE.CylinderGeometry(s.x*.02,s.x*.07,s.y*1.5,6),fur);along(t,hipPos.clone().add(V(0,-.05,-.15)),V(0,-.5,-1),s.y*1.5,hips);}
  }
  if(race==='worgen'){
   const fur=new THREE.MeshStandardMaterial({color:0x6e665e,roughness:.95});
@@ -3392,7 +3399,7 @@ const C_=(h)=>new THREE.Color(h);
 const SKY={day:[C_(0x3f86d6),C_(0xcfe3f2)],dusk:[C_(0x2b3c80),C_(0xf2a86a)],night:[C_(0x101a3c),C_(0x34437a)]};
 let dayF=1;
 function updateSky(){
- if(world.inCrypt){skyU.top.value.set(0x050308);skyU.bot.value.set(0x0a0812);scene.fog.color.set(0x07050c);sun.intensity=.06;hemi.intensity=.55;hemi.color.set(0x8a7ab0);for(const l of lamps)l.sp.material.opacity=0;return;}
+ if(world.inCrypt){skyU.top.value.set(0x050308);skyU.bot.value.set(0x0a0812);scene.fog.color.set(0x07050c);sun.intensity=.06;hemi.intensity=1.05;hemi.color.set(0x9a8ac0);for(const l of lamps)l.sp.material.opacity=0;return;}
  const h=(S.time%1440)/60,ang=(h-5)/16*Math.PI,el=Math.sin(ang);
  dayF=clamp(el*2.2+.15,0,1);const dusk=clamp(1-Math.abs(el)*4,0,1)*(h>4&&h<22?1:0);
  const top=SKY.night[0].clone().lerp(SKY.day[0],dayF).lerp(SKY.dusk[0],dusk*.6),bot=SKY.night[1].clone().lerp(SKY.day[1],dayF).lerp(SKY.dusk[1],dusk*.8);
@@ -3562,6 +3569,9 @@ function render3d(dt){
  if(p&&p.av){syncAvatar(p,dt,p.snap?(p.snap.mode==='lie'?.55:p.snap.mode==='sit'?.05:.02):0);if(rod)rod.visible=!!(p.task&&p.task.phase==='do'&&p.task.act.rod);
   if(p.pet&&p.pet.av)syncAvatar(p.pet,dt,0);if(p.vpet&&p.vpet.av)syncAvatar(p.vpet,dt,0);}
  for(const n of npcs)if(n.av)syncAvatar(n,dt,0);
+ // dungeon monsters: place their models where they are and play their animations (they pick their own clips)
+ for(const m of mobs){if(!m.av)continue;const g=m.av.group;if(m.dead&&m.respawnT<=-4){g.visible=false;continue;}g.visible=true;g.position.set(wx(m.x),0,wz(m.y));
+  let dy=(m.yaw||0)-g.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));g.rotation.y+=dy*Math.min(1,dt*10);if(g.position.distanceToSquared(camera.position)<70*70)m.av.tick(dt);}
  for(const o of world.vendors){if(o.av&&o.av.mixer&&o.visG.visible){if(o.visG.position.distanceTo(camera.position)<60)o.av.tick(dt);}}
  // particles
  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.t-=dt;s.v.y-=dt*3;s.m.position.addScaledVector(s.v,dt);s.m.material.opacity=clamp(s.t,0,1);if(s.t<=0){scene.remove(s.m);s.m.material.dispose();sparks.splice(i,1);}}
@@ -3652,6 +3662,9 @@ function updateRaid(dt){
   if(w.position.y<4.5)for(const nn of npcs){if(!nn.guard||!nn.av)continue;if(Math.hypot(wx(nn.x)-w.position.x,wz(nn.y)-w.position.z)<5&&Math.random()<dt*1.5)hitWhelp(w,1,false);}
  }
  R.guardT=(R.guardT||0)-dt;if(R.guardT<=0){R.guardT=2.5;for(const nn of npcs){if(!nn.guard||!nn.av||nn.hold||nn.post)continue;const tx2=Math.floor(R.cx/TS+rand(-5,5)),ty2=Math.floor(R.cz/TS+rand(-5,5));if(passable(tx2,ty2)){const pth=findPath(Math.floor(nn.x),Math.floor(nn.y),(x,y)=>x===tx2&&y===ty2,tx2,ty2,9000);if(pth){nn.path=pth.slice(0,60);nn.wait=6;}}if(Math.random()<.15)say(nn,pick(['For Stormwind!','Hold the line!','Aim for the wings!','I\'ve got this one!']),false);}}
+ // autopilot joins the defense of the city
+ if(S.auto&&autoOn()&&!p.fight&&!inCrypt()&&!p.casting){R.apT=(R.apT||0)-dt;if(R.apT<=0){R.apT=2;const w=whelps.filter(w=>w.hp>0&&w.state!=='fall').sort((a,b)=>Math.hypot(a.position.x-wx(p.x),a.position.z-wz(p.y))-Math.hypot(b.position.x-wx(p.x),b.position.z-wz(p.y)))[0];
+  if(w){if(p.task)endTask();p.fight=w;if(!R.apSaid){R.apSaid=1;chat(`${esc(p.name)} rushes to defend the city!`,'fw');}}}}
  // you vs. the whelp you clicked
  if(p.fight){const w=p.fight;if(!whelps.includes(w)||w.state==='fall'){p.fight=null;}else{
   const d=Math.hypot(wx(p.x)-w.position.x,wz(p.y)-w.position.z);R.walkT=(R.walkT||0)-dt;
@@ -3665,9 +3678,9 @@ function fightWhelp(w){if(!S.raid)return;p.fight=w;S.lastManual=performance.now(
 // Real-time fights: click a monster (or face it and press E / A) to attack; Q class ability; R healing potion.
 // =====================================================================
 const MOBDEF={
- kobold:{name:'Kobold Tunneler',model:'Rogue',armor:'#7a5a3a',scale:.76,hp:18,dmg:4,xp:8,gold:[2,5],loot:[['candle',.55],['linen',.3]],candle:1,lvl:3},
- koboldMiner:{name:'Kobold Miner',model:'Barbarian',armor:'#6a5030',scale:.82,hp:28,dmg:6,xp:11,gold:[3,7],loot:[['candle',.5],['linen',.35]],candle:1,lvl:4,gear:['1H_Axe']},
- koboldBoss:{name:'Goldtooth',model:'Barbarian',armor:'#c9a24a',scale:.9,hp:130,dmg:10,xp:60,gold:[30,45],loot:[['goldtooth',1],['healpot',.5]],candle:1,lvl:6,boss:1,gear:['2H_Axe'],resp:300},
+ kobold:{name:'Kobold Tunneler',race:'kobold',model:'Rogue',armor:'#7a5a3a',scale:.76,hp:18,dmg:4,xp:8,gold:[2,5],loot:[['candle',.55],['linen',.3]],candle:1,lvl:3},
+ koboldMiner:{name:'Kobold Miner',race:'kobold',model:'Barbarian',armor:'#6a5030',scale:.82,hp:28,dmg:6,xp:11,gold:[3,7],loot:[['candle',.5],['linen',.35]],candle:1,lvl:4,gear:['1H_Axe']},
+ koboldBoss:{name:'Goldtooth',race:'kobold',model:'Barbarian',armor:'#c9a24a',scale:.9,hp:130,dmg:10,xp:60,gold:[30,45],loot:[['goldtooth',1],['healpot',.5]],candle:1,lvl:6,boss:1,gear:['2H_Axe'],resp:300},
  skelMinion:{name:'Skeleton Minion',model:'Skeleton_Minion',scale:1,hp:30,dmg:7,xp:12,gold:[3,8],loot:[['bone',.6],['linen',.3]],lvl:6,crypt:1},
  skelWarrior:{name:'Skeleton Warrior',model:'Skeleton_Warrior',scale:1.05,hp:52,dmg:11,xp:18,gold:[5,11],loot:[['bone',.7],['essence',.08]],lvl:8,crypt:1},
  skelMage:{name:'Skeleton Mage',model:'Skeleton_Mage',scale:1,hp:36,dmg:9,xp:16,gold:[4,10],loot:[['bone',.5],['essence',.12]],lvl:7,ranged:1,crypt:1},
@@ -3684,7 +3697,7 @@ const hpMax=()=>100+lvl('combat')*14;
 const inDungeon=()=>{if(!p)return false;const z=zoneAt(p.x,p.y);return z==='Fargodeep Camp'||z==='The Catacombs';};
 const inCrypt=()=>!!p&&p.x>=MW;
 function spawnMob(m){const D=MOBDEF[m.type];m.hp=D.hp;m.x=m.hx;m.y=m.hy;m.dead=false;m.state='idle';m.cd=rand(.5,1.5);m.wanderT=rand(1,4);m.yaw=rand(0,6.28);m.path=[];
- if(!m.av){const av=makeAvatar({model:D.model,race:'human',armor:D.armor,gear:D.gear||[]});av.group.scale.multiplyScalar(D.scale);scene.add(av.group);m.av=av;
+ if(!m.av){const av=makeAvatar({model:D.model,race:D.race||'human',armor:D.armor,gear:D.gear||[]});av.group.scale.multiplyScalar(D.scale);scene.add(av.group);m.av=av;
   if(D.candle&&av.headBone){const c=new THREE.Group();c.add(meshAt(new THREE.CylinderGeometry(.06,.07,.22,8),new THREE.MeshStandardMaterial({color:0xf3ead2}),0,0,0));const fl=meshAt(new THREE.ConeGeometry(.05,.12,6),MAT.fire,0,.17,0);c.add(fl);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.glow,color:0xffc060,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.9}));sp.scale.set(.6,.6,1);sp.position.y=.18;c.add(sp);c.position.set(0,.42,0);av.headBone.add(c);}
   const pk=new THREE.Mesh(new THREE.CylinderGeometry(.7*Math.max(1,D.scale),.7,2.2*D.scale,8),MAT.pick);pk.position.y=1;pk.userData.mob=m;av.group.add(pk);pickables.push(pk);m.pick=pk;
   m.lbl=mkLabel('mob');m.lbl.el.insertAdjacentHTML('beforeend','<div class="hb"><i></i></div>');m.lbl.hb=m.lbl.el.querySelector('.hb i');}
@@ -3702,7 +3715,7 @@ function buildDungeons(){for(const [type,x,y] of MOBSPAWN){const m={isMob:true,t
  for(const [x,y,r] of [[148,11,0],[154,11,0],[124,32,90],[124,38,90],[151,52,0],[147,52,0],[144,34,0],[158,34,0]]){const g=new THREE.Group();g.add(meshAt(new THREE.BoxGeometry(1.4,.9,2.6),stoneD,0,.45,0));g.add(meshAt(new THREE.BoxGeometry(1.6,.25,2.8),MAT.stone,0,1,0));g.add(meshAt(new THREE.SphereGeometry(.22,8,6),boneM,0,1.25,-.9));g.position.set(wx(x+.5),0,wz(y+OFF+.5));g.rotation.y=r*Math.PI/180;scene.add(g);}
  for(let k=0;k<40;k++){const room=pick(CRYPT_ROOMS),x=rand(room[0],room[2]+1),y=rand(room[1],room[3]+1);scene.add(meshAt(new THREE.SphereGeometry(rand(.08,.18),6,5),boneM,wx(x),.08,wz(y+OFF)));}
  world.cryptLights=[];
- for(const [x,y] of [[124,10],[151,11],[151,25],[151,34],[125,34],[149,52]]){const l=new THREE.PointLight(0xff8a3a,14,16,2);l.position.set(wx(x+.5),2.6,wz(y+OFF+.5));scene.add(l);world.cryptLights.push(l);const f=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.glow,color:0xff9040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));f.scale.set(1.6,2.2,1);f.position.copy(l.position);scene.add(f);world.fires=world.fires||[];world.fires.push({sp:f,s:1.6,ph:Math.random()*6});}
+ for(const [x,y] of [[124,10],[151,11],[151,25],[151,34],[125,34],[149,52],[136,10],[135,34],[143,36],[158,36],[125,40],[150,44],[140,52],[158,55],[146,6],[156,16]]){const l=new THREE.PointLight(0xff8a3a,14,18,2);l.position.set(wx(x+.5),2.6,wz(y+OFF+.5));scene.add(l);world.cryptLights.push(l);const f=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.glow,color:0xff9040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));f.scale.set(1.6,2.2,1);f.position.copy(l.position);scene.add(f);world.fires=world.fires||[];world.fires.push({sp:f,s:1.6,ph:Math.random()*6});}
  for(const [x0,y0,x1,y1] of CRYPT_ROOMS)if(x1-x0>6)for(let x=x0+2;x<x1;x+=5){placeModel('dun/torch_mounted',{x:wx(x+.5),z:wz(y0+OFF)+.15,fitH:.7,alignTop:2.6,rot:0});}
 }
 function enterCrypt(){S.lastManual=performance.now();p.x=124.5;p.y=10.5+OFF;p.path=[];p.foe=null;snapCam();sfx('door',.6,.8);chat('You descend the worn stairs into the Catacombs. The air is cold. Something rattles in the dark.','err');}
@@ -3749,7 +3762,7 @@ function updateDungeon(dt){
  const inCombat=performance.now()-(p.lastHit||0)<5000||!!p.foe;if(!inCombat&&p.hp<hm)p.hp=Math.min(hm,p.hp+hm*.08*dt);
  if(p.atkT>0)p.atkT-=dt;
  // crypt darkness
- const cr=inCrypt();if(cr!==world.inCrypt){world.inCrypt=cr;scene.fog.near=cr?14:140;scene.fog.far=cr?60:600;for(const l of world.cryptLights||[])l.visible=true;}
+ const cr=inCrypt();if(cr!==world.inCrypt){world.inCrypt=cr;scene.fog.near=cr?18:140;scene.fog.far=cr?80:600;for(const l of world.cryptLights||[])l.visible=true;}
  if(ws<=0)return;
  for(const m of mobs){const D=MOBDEF[m.type];
   if(m.dead){m.respawnT-=dt;if(m.respawnT<=-4)m.av.group.visible=false;if(m.respawnT<=0&&Math.hypot(m.hx-p.x,m.hy-p.y)>14)spawnMob(m);continue;}
@@ -4744,7 +4757,7 @@ function drawDiveHud(){
  {const zn=DL[li].name.toUpperCase();dg.font='800 15px Cinzel,Georgia,serif';const tw=dg.measureText(zn).width,w=tw+(li<5?110:40);hudPanel(dW/2-w/2,10,w,36,18);dg.textAlign='left';dg.textBaseline='middle';dg.fillStyle='#ffe08a';dg.fillText(zn,dW/2-w/2+20,29);
   if(li<5)for(let k=0;k<3;k++){const got=k<P.clues[li].length;dg.font='17px system-ui';dg.fillStyle=got?'#ffd100':'rgba(255,255,255,.25)';dg.fillText(got?'✦':'✧',dW/2+w/2-76+k*20,29);}}
  // ---- messages
- DV.msgs.forEach((m,i)=>{dg.globalAlpha=clamp(m.t,0,1);pill(m.text,dW/2,72+i*36,m.col,'rgba(6,16,26,.78)','700 15px system-ui');});dg.globalAlpha=1;
+ {const narrow=dW<1100,y0=narrow?dH-230:72;DV.msgs.forEach((m,i)=>{dg.globalAlpha=clamp(m.t,0,1);pill(m.text,dW/2,y0+i*(narrow?30:36),m.col,'rgba(6,16,26,.78)',narrow?'700 13px system-ui':'700 15px system-ui');});dg.globalAlpha=1;}   // narrow screens: above the gear bar, clear of the stats panel
  if(DV.title){const a=clamp(DV.title.t,0,1)*clamp(4-DV.title.t,0,1)*1.5;dg.globalAlpha=clamp(a,0,1);dg.textAlign='center';dg.textBaseline='middle';dg.font='800 44px Cinzel,Georgia,serif';dg.lineWidth=7;dg.strokeStyle='rgba(0,0,0,.8)';dg.strokeText(DV.title.text,dW/2,dH*.32);dg.fillStyle='#ffd100';dg.fillText(DV.title.text,dW/2,dH*.32);dg.font='600 16px system-ui';dg.fillStyle='#fff';dg.fillText(DV.title.sub,dW/2,dH*.32+38);dg.globalAlpha=1;}
  // ---- pickup feed (left)
  (DV.feed||[]).forEach((fd,i)=>{const sl=clamp((3.5-fd.t)*6,0,1),a=clamp(fd.t,0,1);dg.globalAlpha=a;const y=170+i*34,x=16-(1-sl)*60;hudPanel(x,y,210,28,14);dg.font='16px '+EMOJI;dg.textAlign='left';dg.textBaseline='middle';dg.fillText(fd.ic,x+10,y+15);dg.font='700 13px system-ui';dg.fillStyle=fd.col;dg.fillText('+ '+fd.label,x+36,y+15);});dg.globalAlpha=1;
@@ -4764,7 +4777,7 @@ function drawDiveHud(){
  if(DV.lore){const w=Math.min(620,dW-40),x=dW/2-w/2,y=dH-230;dg.globalAlpha=clamp(DV.lore.t,0,1);dg.fillStyle='rgba(239,224,185,.97)';dg.strokeStyle='#6b4a1e';dg.lineWidth=3;rr(x,y,w,90,10);dg.fill();dg.stroke();
   dg.textAlign='center';dg.fillStyle='#6b1a10';dg.font='800 14px Cinzel,Georgia,serif';dg.textBaseline='top';dg.fillText(DV.lore.title||'✦ Kingdom Clue ✦',dW/2,y+9);dg.fillStyle='#2b1d0e';dg.font='14px Georgia,serif';
   const words=DV.lore.text.split(' ');let line='',ly=y+33;for(const wd of words){const tl=line?line+' '+wd:wd;if(dg.measureText(tl).width>w-34){dg.fillText(line,dW/2,ly);line=wd;ly+=18;}else line=tl;}dg.fillText(line,dW/2,ly);dg.globalAlpha=1;}
- if((DV.diveT||0)<25){dg.globalAlpha=clamp(25-(DV.diveT||0),0,1)*.8;dg.textAlign='right';dg.font='12px system-ui';dg.fillStyle='#cfe6f2';dg.textBaseline='bottom';dg.fillText(PAD.on?'L-stick swim · R-stick aim · RT harpoon · LT/RB knife · A dash · X interact · Y lamp · D-pad gear':TOUCH.on?'Joystick swim · tap to harpoon · buttons: knife, dash, lamp, boat':'WASD swim · Space dash · Click harpoon · Q knife · F lamp · E interact · 1–4 gear',dW-16,dH-14);dg.globalAlpha=1;}
+ if((DV.diveT||0)<25){dg.globalAlpha=clamp(25-(DV.diveT||0),0,1)*.8;dg.textAlign=dW<1100?'center':'right';dg.font='12px system-ui';dg.fillStyle='#cfe6f2';dg.textBaseline='bottom';dg.fillText(PAD.on?'L-stick swim · R-stick aim · RT harpoon · LT/RB knife · A dash · X interact · Y lamp · D-pad gear':TOUCH.on?'Joystick swim · tap to harpoon · buttons: knife, dash, lamp, boat':'WASD swim · Space dash · Click harpoon · Q knife · F lamp · E interact · 1–4 gear',dW<1100?dW/2:dW-16,dW<1100?dH-82:dH-14);dg.globalAlpha=1;}
  // ---- fog-of-war map (top-right) + depth gauge
  const mh=Math.min(dH*.36,300),mw=mh*DV.W/FLOOR,mx0=dW-mw-22,my0=16,sx=mw/DV.W,sy=mh/FLOOR,rows=Math.ceil(FLOOR/50);
  if(!DV.mm)DV.mm=document.createElement('canvas');
