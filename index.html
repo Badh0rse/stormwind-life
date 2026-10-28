@@ -329,6 +329,7 @@ body.touch #thint[hidden]{display:none}
     <div class="slot" id="b-sound" data-tip="<b>Volume</b><br>Master, music and sound effects">🔊</div>
     <div class="slot" id="b-music" data-tip="<b>Music on/off</b><br>CC0 orchestral tracks from OpenGameArt.org">🎵</div>
     <div class="slot" id="b-ui" data-tip="<b>Edit UI layout</b> (U)<br>Drag any panel to move it, drag the yellow corner to resize.">🖉</div>
+    <div class="slot" id="b-dev" hidden data-tip="<b>Dev Tools</b> (`)<br>Testing cheats">🛠</div>
     <div class="slot" id="b-help" data-tip="<b>How to play</b>">❓</div>
   </div>
 </div>
@@ -828,12 +829,12 @@ const CHAINS={
   {type:'seafish',need:3,title:'Tall Tales',text:'Finn swears he once hooked a baby kraken off these piers. First, prove you can even fish out here: catch 3 fish off the harbor piers.',gold:25,xp:['fishing',20]},
   {type:'deliver',item:'crab',target:'Sailor Finn',title:'Crab Bait',text:'"Krakens love crab. Everyone knows that. Well, I know that." Catch a Harbor Crab off the piers and bring it to Finn.',gold:20},
   {type:'catchId',match:'squid',need:1,title:'Night Shift',text:'"The little ones only come up after dark, chasing squid." Catch a Midnight Squid off the piers at night (21:00–5:00).',gold:35,xp:['fishing',25],give:['glowBait',2]},
-  {type:'catchId',match:'krakling',need:1,title:'The One That Got Away',text:'Finn gave you his Glowing Legendary Bait. Attach it (Bags) at the piers and land Gurgles, the Baby Kraken. Needs Fishing 4. Patience!',gold:150,xp:['fishing',60]}]},
+  {type:'catchId',match:'krakling',need:1,title:'The One That Got Away',text:'Finn gave you his Glowing Legendary Bait. Attach it (Bags) at the piers and land Gurgles, the Baby Kraken. Needs Fishing 21. Patience!',gold:150,xp:['fishing',60]}]},
  elarae:{giver:'Elarae Moonwhisper',name:'Moonlit Waters',steps:[
   {type:'act',match:'Bathe in the Moonwell',obj:'Moonwell',need:1,title:'Cleansing Ritual',text:'Elarae insists you "become one with the water" before fishing her sacred pond. Bathe in the imported Moonwell.',gold:15},
   {type:'catchId',match:'perch',need:2,title:'Pond Census',text:'"The pond spirits must be counted." Catch 2 Lion\'s Rest Perch at the Pond Fishing Spot.',gold:20,xp:['fishing',15]},
   {type:'catchId',match:'nightEel',need:1,title:'Children of the Moon',text:'Moonglow Eels only rise at night (21:00–5:00), in the pond or the canals. Catch one.',gold:35,xp:['fishing',20],give:['glowBait',2]},
-  {type:'catchId',match:'mrWhiskers',need:1,title:'The Ancient One',text:'An ancient catfish named Mr. Whiskers has ruled the pond for 300 years. Elarae wants to "meet" him. Needs Fishing 4 (Glowing Legendary Bait helps a lot).',gold:120,xp:['fishing',50]}]},
+  {type:'catchId',match:'mrWhiskers',need:1,title:'The Ancient One',text:'An ancient catfish named Mr. Whiskers has ruled the pond for 300 years. Elarae wants to "meet" him. Needs Fishing 21 (Glowing Legendary Bait helps a lot).',gold:120,xp:['fishing',50]}]},
  thoren:{giver:'Thoren Ironmug',name:'Brewfest... Eventually',steps:[
   {type:'deliver',item:'ale',target:'Thoren Ironmug',title:'Quality Control',text:'Thoren is planning an "unofficial" Brewfest. Step one: bring him an ale to "test."',gold:12},
   {type:'act',match:'Arm Wrestle a Dwarf',obj:'Thunderbrew Stall',need:2,title:'Opening Ceremony',text:'Every proper Brewfest opens with arm wrestling. Arm wrestle a dwarf at the Thunderbrew Stall twice.',gold:18,xp:['combat',10]},
@@ -950,6 +951,7 @@ const zoneAt=(x,y)=>ZONES.find(z=>z.test(Math.floor(x),Math.floor(y))).name;
 const RELEASE=Date.UTC(2026,10,4,0,0,0);           // WoW Forever launch: 4 Nov 2026 00:00 UTC
 const END=RELEASE-36e5;                              // the world ends one hour before launch (6 PM Eastern, Nov 3)
 const QS=new URLSearchParams(location.search);
+let DEV=false;try{if(QS.has('dev'))localStorage.setItem('stormwindLife3d.dev',QS.get('dev')==='0'?'0':'1');DEV=localStorage.getItem('stormwindLife3d.dev')==='1';}catch(e){}
 let nowOffset=0;                                     // test hooks: ?days=2.5  ?apocalypse=1 (12 s left)  ?apocalypse=now
 if(QS.has('days'))nowOffset=END-parseFloat(QS.get('days'))*864e5-Date.now();
 if(QS.has('apocalypse'))nowOffset=END-(QS.get('apocalypse')==='now'?-1000:12000)-Date.now();
@@ -1015,7 +1017,13 @@ const hour=()=>Math.floor((S.time%1440)/60);
 const day=()=>Math.floor(S.time/1440);
 const fmtClock=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
 const fmtDur=m=>m>=60?(m%60?`${Math.floor(m/60)}h ${m%60}m`:`${m/60}h`):`${m}m`;
-const lvl=k=>Math.min(10,1+Math.floor(((p&&p.xp[k])||0)/60));
+// Levels 1-60 for every skill. Combat = your character level (fight, train, do quests); professions level by doing them.
+const MAXLV=60;
+const xpNeed=(k,L)=>k==='combat'?Math.round((5+2*L)*(4+.36*L)):15+4*L;   // XP to go from level L to L+1
+const XPT={};const xpTable=k=>{const key=k==='combat'?'c':'p';if(XPT[key])return XPT[key];const t=[0,0];for(let L=1;L<MAXLV;L++)t[L+1]=t[L]+xpNeed(k,L);return XPT[key]=t;};
+const lvl=k=>{const x=(p&&p.xp[k])||0,t=xpTable(k);let L=1;while(L<MAXLV&&x>=t[L+1])L++;return L;};
+const lvProg=k=>{const L=lvl(k);if(L>=MAXLV)return 1;const t=xpTable(k),x=(p&&p.xp[k])||0;return (x-t[L])/(t[L+1]-t[L]);};
+const lvF=k=>1+(lvl(k)-1)*9/59;   // the old 1-10 scale, for chances, pay and fishing gates
 const has=k=>p&&p.furni[k];
 const mood=()=>{let s=0;for(const [k] of NEEDS)if(k!=='sanity')s+=p.needs[k];return s/(NEEDS.length-1);};
 const moodLabel=m=>m>=80?'Ecstatic':m>=60?'Happy':m>=40?'Fine':m>=20?'Uncomfortable':'Miserable';
@@ -1081,7 +1089,7 @@ const OBJS=[
   {label:'Buy Bread (2g)',cost:2,mins:2,done(){addItem('bread',1);}},
   {label:'Buy Ale (3g)',cost:3,mins:2,done(){addItem('ale',1);}},
   {label:'Buy a Peacebloom Bouquet (5g)',cost:5,mins:2,done(){addItem('flowers',1);}},
-  {label:'Haggle for Fun',mins:15,gain:{social:10,fun:5},xp:['charisma',4],done(){if(Math.random()<.2+.03*lvl('charisma')){addItem('bread',1);chat('The baker gives up and hands you free bread just to make you leave.');}else chat('The baker refuses to budge. Respect.');}}]},
+  {label:'Haggle for Fun',mins:15,gain:{social:10,fun:5},xp:['charisma',4],done(){if(Math.random()<.2+.03*lvF('charisma')){addItem('bread',1);chat('The baker gives up and hands you free bread just to make you leave.');}else chat('The baker refuses to budge. Respect.');}}]},
  {x:57,y:53,name:'Notice Board',vis:{proc:'board'},board:true,acts:[
   {label:'Read the Notice Board',mins:0,done(){openBoard();}}]},
  {x:51,y:70,w:2,h:2,name:'Trade District Fountain',vis:{proc:'fountain'},acts:[
@@ -1129,7 +1137,7 @@ const OBJS=[
  // Dwarven District
  {x:85,y:14,w:2,name:'Thunderbrew Stall',vis:{m:'hex/decoration/props/tent',fit:3.6},acts:[
   {label:'Buy Thunderbrew Ale (3g)',cost:3,mins:2,done(){addItem('ale',1);}},
-  {label:'Arm Wrestle a Dwarf',mins:20,gain:{fun:15,energy:-5},xp:['combat',6],anim:'Interact',done(){chat(Math.random()<.3+.05*lvl('combat')?'You win! The dwarf demands a rematch "when I\'m sober."':'The dwarf wins without putting down his ale.');}}]},
+  {label:'Arm Wrestle a Dwarf',mins:20,gain:{fun:15,energy:-5},xp:['combat',6],anim:'Interact',done(){chat(Math.random()<.3+.05*lvF('combat')?'You win! The dwarf demands a rematch "when I\'m sober."':'The dwarf wins without putting down his ale.');}}]},
  {x:81,y:7,name:'Anvil',vis:{proc:'anvil'},acts:[
   {label:'Work a Forge Shift (4h)',mins:240,gain:{energy:-25,hygiene:-30,fun:-10},sub:()=>`Pays ~${forgePay()}g · open 6:00–20:00`,req:()=>p.needs.sanity<15?'Too shaken to work. Restore your Sanity first.':(hour()>=6&&hour()<20)?null:'The Forge is open 6:00–20:00.',xp:['smithing',25],anim:'1H_Melee_Attack_Chop',done(){const pay=forgePay();addGold(pay);ach('shift');ev('shift');chat(`Shift done! The foreman pays you ${pay}g and says "Not bad, for a ${RACES[p.race].name.toLowerCase()}."`);if(Math.random()<.2)addItem('dagger',1);}},
   {label:'Practice Smithing',mins:60,gain:{fun:5,hygiene:-10},xp:['smithing',12],anim:'1H_Melee_Attack_Chop'}]},
@@ -1165,7 +1173,7 @@ const OBJS=[
  {x:86,y:72,name:()=>has('tub')?'Copper Bathtub':'Wash Basin',vis:{m:()=>has('tub')?null:'hex/decoration/props/bucket_water',proc:()=>has('tub')?'tub':null,fit:.9},acts:[
   {label:'Wash Up',mins:25,gain:()=>has('tub')?{hygiene:80,fun:10}:{hygiene:40},tag:['hygiene'],anim:'Interact'}]},
  {x:86,y:76,rot:-90,name:()=>has('stove')?'Gnomish Stove':'Campfire Stove',vis:{m:()=>has('stove')?'res/stove_single':null,proc:()=>has('stove')?null:'campfire',fit:1.6},acts:[
-  {label:'Cook & Eat Mystery Stew',mins:40,gain:()=>({hunger:35+4*lvl('cooking')}),xp:['cooking',8],tag:['hunger'],anim:'Interact',adjust:()=>has('stove')?20:40,done(){chat(pick(['It\'s... edible.','You added "a pinch of spice." It was a whole spider leg. Delicious.','Mom would be proud. Or concerned.']));}},
+  {label:'Cook & Eat Mystery Stew',mins:40,gain:()=>({hunger:35+4*lvF('cooking')}),xp:['cooking',8],tag:['hunger'],anim:'Interact',adjust:()=>has('stove')?20:40,done(){chat(pick(['It\'s... edible.','You added "a pinch of spice." It was a whole spider leg. Delicious.','Mom would be proud. Or concerned.']));}},
   {label:'Grill a Fish',mins:30,req:()=>rawId()?null:'You need a raw fish.',adjust:()=>has('stove')?15:30,xp:['cooking',10],anim:'Interact',done(){const f=rawId();if(f){takeItem(f);addItem('cookedFish',1);ev('cook');}}},
   {label:'Cook a Seafood Feast',mins:60,req:()=>rawCount()>=3?null:`Needs 3 raw fish of any kind (you have ${rawCount()}).`,adjust:()=>has('stove')?30:60,xp:['cooking',20],anim:'Interact',done(){for(let i=0;i<3;i++){const f=rawId();if(f)takeItem(f);}addItem('cookedFeast',1);ach('feast');chat('The whole street smells amazing. Three neighbours "just happen" to drop by.');}}]},
  {x:81,y:74,name:'Murloc Plushie',vis:{proc:'plush'},show:()=>has('plush'),acts:[
@@ -1221,8 +1229,8 @@ function rebuildBlocked(){blocked.fill(0);for(const o of OBJS)if(!p||shown(o))fo
 rebuildBlocked();
 const HALLB=BID('posse'),HALLIN=[];for(let y=HALLB.y+1;y<HALLB.y+HALLB.h-1;y++)for(let x=HALLB.x+1;x<HALLB.x+HALLB.w-1;x++)if(passable(x,y))HALLIN.push({x,y});
 const BLDIN={};const bldIn=id=>BLDIN[id]||(BLDIN[id]=(()=>{const b=BID(id),t=[];for(let y=b.y+1;y<b.y+b.h-1;y++)for(let x=b.x+1;x<b.x+b.w-1;x++)if(passable(x,y))t.push({x,y});return t;})());
-const forgePay=()=>Math.round((18+6*lvl('smithing'))*payMult());
-const guardPay=()=>Math.round((20+5*lvl('combat'))*payMult()*(p.cls==='warrior'?1.15:1));
+const forgePay=()=>Math.round((18+6*lvF('smithing'))*payMult());
+const guardPay=()=>Math.round((20+5*lvF('combat'))*payMult()*(p.cls==='warrior'?1.15:1));
 
 // trees (deterministic, avoid paths & objects)
 const objNear=(x,y)=>OBJS.some(o=>x>=o.x-1&&x<=o.x+o.w&&y>=o.y-1&&y<=o.y+o.h);
@@ -1393,7 +1401,7 @@ function takeItem(id){p.items[id]--;if(p.items[id]<=0)delete p.items[id];}
 const lootValue=()=>Object.keys(p.items).reduce((s,k)=>s+(ITEMS[k].loot?ITEMS[k].sell*p.items[k]:0),0);
 function sellAll(){const v=lootValue();for(const k of Object.keys(p.items))if(ITEMS[k].loot)delete p.items[k];if(v>0){chat('Auctioneer Fitch takes your loot. "Pleasure doing business. Mostly."');addGold(v);}}
 function addXp(k,n){const before=lvl(k);let m=1;if(p.race==='dwarf'&&k==='smithing')m=1.5;if(p.race==='gnome'&&k==='arcane')m=1.5;if(p.cls==='warrior'&&k==='combat')m*=1.5;if(p.cls==='mage'&&k==='arcane')m*=1.5;if(mood()<30)m*=.75;if(p.needs.sanity<40)m*=.85;p.xp[k]=(p.xp[k]||0)+n*m;const L=lvl(k);
- if(L>before){chat(`Your skill in ${SKILLS[k][0]} has increased to ${L}.`,'skill');sparkle(p.x,p.y,0x8fa8ff,20);snd('lvl');if(L>=5)ach('skill5');if(L>=10)ach('skill10');}}
+ if(L>before){chat(`Your skill in ${SKILLS[k][0]} has increased to ${L}.`,'skill');if(k==='combat'){$('uname').textContent=`${p.name} · Lv ${L}`;p.hp=hpMax();qBanner('Level Up!',`Level ${L}`);}sparkle(p.x,p.y,0x8fa8ff,20);snd('lvl');if(L>=5)ach('skill5');if(L>=10)ach('skill10');}}
 function buff(k,mins){p.buffs[k]=Math.max(p.buffs[k]||0,S.time)+mins;}
 function relUp(n,d,quiet){const before=n.rel;n.rel=clamp(n.rel+d,0,100);if(!quiet&&n.rel>=50&&before<50)chat(`You are now Revered with ${esc(n.name)}.`,'skill');if(npcs.filter(x=>x.rel>=50).length>=3)ach('friends');}
 const repLabel=r=>r<10?'Neutral':r<30?'Friendly':r<50?'Honored':r<80?'Revered':'Exalted';
@@ -1428,7 +1436,7 @@ function pickFish(where,night,L){
   let w=f.c||0;if(f.r)w=f.r*(1+.25*L)*(p.perks.pole?1.6:1)*(p.perks.rod?1.3:1);if(f.legend)w=L>=4?(buffOn('glowBait')?8:1):0;if(w>0)pool.push([id,w]);}
  let r=Math.random()*pool.reduce((a,b)=>a+b[1],0);for(const [id,w] of pool)if((r-=w)<=0)return id;return pool[0][0];}
 function landFish(id,where){
- const f=FISHDB[id],L=lvl('fishing');addItem(id,1);addXp('fishing',f.legend?40:f.r?8:3);
+ const f=FISHDB[id],L=lvF('fishing');addItem(id,1);addXp('fishing',f.legend?40:f.r?8:3);
  ach('firstFish');ev('catch');ev('catchId',id);if(where==='sea'){ach('seaFish');ev('seafish');}
  if(id==='boot')ach('boot');if(f.r)ach('carp');if(f.night)ach('nightFish');
  p.flags.fishTotal=(p.flags.fishTotal||0)+1;if(p.flags.fishTotal>=100)ach('fish100');
@@ -1442,13 +1450,13 @@ function landFish(id,where){
  const dz=p.flags.derby;if(derbyOn()&&lb>dz.best){dz.best=lb;dz.bestId=id;chat(`🏆 Derby: your biggest catch is now ${lb} lb. ${esc(dz.rival)} is at ${dz.rw} lb.`,'gold');}
 }
 function rollCatch(sea){
- const L=lvl('fishing');if(Math.random()>.35+.05*L+(p.cls==='hunter'?.12:0)+(buffOn('lure')?.15:0)+(buffOn('bait')?.2:0)+(p.perks.rod?.15:0))return;
+ const L=lvF('fishing');if(Math.random()>.35+.05*L+(p.cls==='hunter'?.12:0)+(buffOn('lure')?.15:0)+(buffOn('bait')?.2:0)+(p.perks.rod?.15:0))return;
  const where=fishWhere(sea),night=isNight();landFish(pickFish(where,night,L),where);
  if(p.perks.tackle&&Math.random()<.15){const b=pickFish(where,night,0);if(!FISHDB[b].junk){chat('Your Gnomish Tackle Box snags a bonus catch!');landFish(b,where);}}
 }
 function jail(msg){p.needs.sanity=clamp(p.needs.sanity-10,0,100);const fine=Math.min(p.gold,20);p.gold-=fine;const j=T(24,45);endTask();p.x=j.x+.5;p.y=j.y+.5;p.path=[];buff('jailbird',480);ach('jail');snapCam();chat(`${msg} You spend the night in the Stockade${fine?` and pay a ${fine}g fine`:''}.`,'err');}
 function shadyJob(){
- const caught=Math.random()<(.25-.012*lvl('charisma'))*(p.cls==='rogue'?.2:1);
+ const caught=Math.random()<(.25-.012*lvF('charisma'))*(p.cls==='rogue'?.2:1);
  if(caught)jail('Caught! A real guard watched you pickpocket a guard in disguise.');
  else{addGold(Math.round(rand(25,60)*(p.cls==='rogue'?1.5:1)));if(Math.random()<.3)addItem('trinket',1);chat('The "job" went smoothly. You don\'t ask questions. They don\'t either.');}
 }
@@ -1614,7 +1622,7 @@ function tick(){
   if(p.bank>0){const i=Math.max(1,Math.min(25,Math.round(p.bank*.005)));p.bank+=i;chat(`The bank paid ${i}g interest. Vault: ${p.bank}g.`,'gold');}}
  if(p.flags.babyDue&&t>=p.flags.babyDue){p.flags.babyDue=0;bornBaby();}
  if(t%60===0)save(false);
- if(t%5===0&&!p.task&&!p.path.length&&!p.casting&&!S.keysDown&&!p.fight){if(autoOn()&&!S.diving&&t-p.idleSince>=6)lifeAI();else if(S.freeWill&&!S.diving&&t-p.idleSince>=30)autonomy();}
+ if(t%5===0&&!p.task&&!p.path.length&&!p.casting&&!S.keysDown&&!p.fight&&!(p.foe&&!p.foe.dead)){if(autoOn()&&!S.diving&&t-p.idleSince>=6)lifeAI();else if(S.freeWill&&!S.diving&&t-p.idleSince>=30)autonomy();}
 }
 // ---------------- autopilot brain ----------------
 const objBy=pr=>OBJS.find(o=>shown(o)&&pr(o));
@@ -1735,6 +1743,7 @@ function tutorialAI(){
 function lifeAI(){
  const h=hour(),n=p.needs,f=p.flags;
  if(tutOn()&&!S.diving&&tutorialAI())return;
+ if(!S.diving&&!tutOn()){if(Math.random()<.35&&gearAI())return;if(Math.random()<(p.quests.some(q=>q.type==='kill'||q.type==='loot')?.7:.45)&&combatAI())return;if(inCrypt()&&tryAct(objNamed('Stairs to the Surface'),'Climb Back Up'))return;}
  if(needsAI(40))return;
  if(derbyOn()&&tryAct(fishSpot(true),''))return;
  if((h>=22||h<6)&&n.energy<75&&tryAct(HOMEBED(),'Sleep'))return;
@@ -1858,7 +1867,7 @@ function npcActs(n){
  const acts=[
   {label:'Chat',mins:15,gain:{social:15},xp:['charisma',3],anim:'Idle',done(){relUp(n,6);say(n,npcLine(n));ev('chat',n.name);if(n.doomsayer)p.needs.sanity=clamp(p.needs.sanity-5,0,100);else if(n.san<30)p.needs.sanity=clamp(p.needs.sanity-3,0,100);}},
   {label:'Tell a Joke',mins:15,xp:['charisma',5],anim:'Idle',done(){
-   if(Math.random()<.4+.06*lvl('charisma')-(p.needs.sanity<40?.15:0)){p.needs.fun=clamp(p.needs.fun+15,0,100);p.needs.social=clamp(p.needs.social+15,0,100);relUp(n,10);say(n,pick(['Ha! Good one.','*snorts* I needed that.','LOL. Like, actually out loud.','I\'m stealing that one.']));}
+   if(Math.random()<.4+.06*lvF('charisma')-(p.needs.sanity<40?.15:0)){p.needs.fun=clamp(p.needs.fun+15,0,100);p.needs.social=clamp(p.needs.social+15,0,100);relUp(n,10);say(n,pick(['Ha! Good one.','*snorts* I needed that.','LOL. Like, actually out loud.','I\'m stealing that one.']));}
    else{p.needs.social=clamp(p.needs.social-5,0,100);relUp(n,-3);say(n,pick(['...','I\'ve heard that one in Barrens chat.','Was that the joke?','*polite cough*']));}}},
   {label:'/wave',mins:1,gain:{social:3},anim:'Cheer',done(){say(p,'*waves*');say(n,'*waves back*',false);relUp(n,1);}},
  ];
@@ -1874,10 +1883,10 @@ function npcActs(n){
  if(n.race==='murloc')acts.push({label:'Give a Fish',mins:5,req:()=>rawId()?null:'You need a raw fish.',done(){takeItem(rawId());p.needs.fun=clamp(p.needs.fun+30,0,100);relUp(n,25);say(n,n.beast==='donut'?'Fish? For ME? ...I will allow it.':n.beast==='mongo'?'*CHOMP* (The fish is gone. So is part of your sleeve.)':'MRGLGLGL!! ♥');if(!n.beast)ach('murloc');}});
  if(n.trainer&&n.trainer===p.cls){const L=skills();
   for(const i of [2,1])if(!knowsSkill(i)){const [lv,cost]=SKTRAIN[i];acts.unshift({label:`Train ${L[i][1]} (${cost}g)`,cost,mins:30,sub:()=>`${L[i][0]} ${L[i][4]} Needs Combat ${lv}.`,req:()=>lvl('combat')<lv?`Needs Combat ${lv} (you have ${lvl('combat')}). Fight in dungeons, raids or at the Training Hall.`:(i===2&&!knowsSkill(1))?`Learn ${L[1][1]} first.`:null,xp:['combat',10],anim:'Spellcasting',done(){p.cskills=p.cskills||{};p.cskills[i]=1;qBanner('New Skill!',`${L[i][1]} (${SKKEY[i]})`);sfx('levelup',.6);chat(`🎓 You learned <b>${L[i][1]}</b>. Use it in a fight with the <b>${SKKEY[i]}</b> key (or its button on the action bar).`,'ach');if(knowsSkill(1)&&knowsSkill(2))ach('allSkills');}});}
-  acts.push({label:'Review Your Class Skills',mins:2,done(){chat(L.map((sk,i)=>`${sk[0]} <b>${sk[1]}</b> (${SKKEY[i]}) ${knowsSkill(i)?'· known':`· Combat ${SKTRAIN[i][0]}, ${SKTRAIN[i][1]}g`}: ${sk[4]}`).join('<br>'));}});}
+  acts.push({label:'Review Your Class Skills',mins:2,done(){chat(L.map((sk,i)=>`${sk[0]} <b>${sk[1]}</b> (${SKKEY[i]}) ${knowsSkill(i)?`· Rank ${ROMAN[skRank(i)]}, skill ${skPts(i)}/${skCap()}`:`· Combat ${SKTRAIN[i][0]}, ${SKTRAIN[i][1]}g`}: ${sk[4]}`).join('<br>'));}});}
  if(n.weaponMaster){const nx=(p.weapon||0)+1,T=WEAPON_TIERS[nx];
   acts.unshift({label:'Weapons Drill (1h, 5g)',cost:5,mins:60,gain:{energy:-15,hygiene:-10,fun:5},xp:['combat',30],tag:[],anim:'1H_Melee_Attack_Slice_Diagonal',done(){chat(pick(['Steeltoe makes you swing until your arms shake. "Again!"','You learn to block, parry and look cool doing it. Mostly the last one.','"Footwork!" Steeltoe yells. You trip over your own footwork.']));}},
-   {label:'Spar with Steeltoe',mins:30,gain:{energy:-10,fun:15},xp:['combat',15],anim:'1H_Melee_Attack_Chop',done(){if(Math.random()<.2+.06*lvl('combat')){relUp(n,6);say(n,'Ha! Ye got me! Lucky shot. Very lucky.');ach('spar');}else say(n,pick(['Too slow!','*taps you with the flat of his axe* Dead. Again.','Ye fight like a kobold with a candle in its eye.']));}},
+   {label:'Spar with Steeltoe',mins:30,gain:{energy:-10,fun:15},xp:['combat',15],anim:'1H_Melee_Attack_Chop',done(){if(Math.random()<.2+.06*lvF('combat')){relUp(n,6);say(n,'Ha! Ye got me! Lucky shot. Very lucky.');ach('spar');}else say(n,pick(['Too slow!','*taps you with the flat of his axe* Dead. Again.','Ye fight like a kobold with a candle in its eye.']));}},
    {label:'Ask About Your Weapon',mins:2,done(){say(n,`That ${wpnName()} hits ${Math.round((wpnMult()-1)*100)}% harder than a rusty one. ${T?`For ${T[1]}g I can make it ${T[0].toLowerCase()}.`:'It doesn\'t get better than that.'}`);}});
   if(T)acts.unshift({label:`Upgrade to ${wpnName(nx)} (${T[1]}g)`,cost:T[1],mins:20,sub:()=>`+${Math.round((T[2]-wpnMult())*100)}% damage`,anim:'Interact',done(){p.weapon=nx;rebuildPlayer();sfx('anvil',.8);qBanner('Weapon Upgraded!',wpnName());chat(`⚔️ Steeltoe hands you a <b>${wpnName()}</b>. You now hit ${Math.round((wpnMult()-1)*100)}% harder in dungeons, raids and street fights.`,'ach');if(nx>=WEAPON_TIERS.length-1)ach('legendaryWpn');}});}
  if(n.beast==='donut'&&!p.flags.posse)acts.unshift({label:'Join the Princess Posse',mins:5,anim:'Cheer',done(){joinPosse();}});
@@ -1891,7 +1900,7 @@ function npcActs(n){
   if(n.status!=='spouse'){
    acts.push({label:'Flirt',mins:10,anim:'Cheer',req:()=>n.rel<30?'Reach Honored friendship first (chat and joke).':null,done(){
     if(sp){loveUp(sp,-10);chat(`Word gets back to ${esc(sp.name)}. That's going to be an awkward dinner.`,'err');}
-    if(Math.random()<.45+.05*lvl('charisma')+(p.cls==='priest'?.1:0)){loveUp(n,10);p.needs.fun=clamp(p.needs.fun+10,0,100);say(n,pick(n.race==='dwarf'?['Och, ye charmer!','Me beard is blushin\'.']:['Oh, stop it. No, keep going.','*blushes*','Was that a pickup line? It worked.','You smell like a fresh hearthstone.']));}
+    if(Math.random()<.45+.05*lvF('charisma')+(p.cls==='priest'?.1:0)){loveUp(n,10);p.needs.fun=clamp(p.needs.fun+10,0,100);say(n,pick(n.race==='dwarf'?['Och, ye charmer!','Me beard is blushin\'.']:['Oh, stop it. No, keep going.','*blushes*','Was that a pickup line? It worked.','You smell like a fresh hearthstone.']));}
     else{loveUp(n,-2);say(n,pick(['...did you just say that out loud?','I have a guild meeting. Forever.','That line is older than Old Man Hobbes.']));}
     addXp('charisma',4);}});
    acts.push({label:'Give Flowers',mins:5,req:()=>p.items.flowers>0?null:'You need a Peacebloom Bouquet (Market Stall).',done(){takeItem('flowers');loveUp(n,15);relUp(n,5);say(n,'For me? Nobody ever gives me flowers!');}});
@@ -2057,6 +2066,38 @@ function openFanBox(){
  sfx('loot',.8);qBanner('Fan Box Opened!',t.replace(/<[^>]+>/g,''));chat(`🎁 You open a Bronze Fan Box! Inside: <b>${t}</b>`,'ach');
  if(G.boxes>=5)ach('fanbox');}
 
+// ---------------- Dev Tools: test cheats (only with ?dev=1; ?dev=0 turns it off again) ----------------
+const DEVTP={'Fargodeep Camp':[12,54],'Old Town thugs':[63,86],'Harbor smugglers':[60,-3],'Catacombs':null,'Posse Hall':[80,80],'Training Hall':[80,72],'Bounty Board':[26,64],'Cathedral Square':[66,38],'Harbor (diving)':[25,-4]};
+function devSetLevel(k,L){p.xp[k]=xpTable(k)[clamp(L,1,MAXLV)]+1;if(k==='combat')p.hp=hpMax();}
+function openDev(){if(!DEV||!p)return;S.panel='dev';const L=lvl('combat');
+ const b=(id,t)=>`<button class="btn" data-dv="${id}" style="margin:2px">${t}</button>`;
+ openPanel('🛠 Dev Tools (testing only)',`<p class="sub">Level ${L}/${MAXLV} · HP ${Math.round(p.hp||hpMax())}/${hpMax()} · ${wpnName()} · gold ${p.gold}${p.god?' · <b style="color:#5aff7a">GOD MODE</b>':''}</p>
+ <div class="lbl">Level</div><div>${[1,5,10,15,20,30,40,50,60].map(v=>b('lv'+v,'Lv '+v)).join('')}<input id="dv-lv" type="number" min="1" max="60" value="${L}" style="width:56px"> ${b('lvset','Set')}</div>
+ <div class="lbl">Professions</div><div>${b('prof1','All 1')}${b('prof30','All 30')}${b('prof60','All 60')}</div>
+ <div class="lbl">Class skills</div><div>${b('learn','Learn all 3')}${b('skmax','Max skill points')}${b('skreset','Reset skill points')}${b('cd','Reset cooldowns')}</div>
+ <div class="lbl">Weapon</div><div>${WEAPON_TIERS.map((w,i)=>b('wp'+i,w[0])).join('')}</div>
+ <div class="lbl">Stuff</div><div>${b('gold','+10,000g')}${b('pots','+20 potions')}${b('fan','+5 Fan Boxes')}${b('god',p.god?'God mode OFF':'God mode ON')}${b('heal','Full heal')}${b('kill','Kill target')}${b('qdone','Complete active quests')}${b('needs','Fill needs')}</div>
+ <div class="lbl">Teleport</div><div>${Object.keys(DEVTP).map(k=>b('tp'+k,k)).join('')}</div>
+ <div class="lbl">World</div><div>${b('noon','Noon')}${b('night','Night')}${b('day','+1 day')}${b('raid','Start raid')}${b('raidend','Win raid')}${b('respawn','Respawn monsters')}${b('dive','Go diving')}</div>
+ <div class="lbl">Info</div><div>${b('table','Monster level table')}</div>`);
+ $('pbody').querySelectorAll('[data-dv]').forEach(el=>el.onclick=()=>{const d=el.dataset.dv;
+  if(d.startsWith('lv')&&d!=='lvset')devSetLevel('combat',+d.slice(2));
+  else if(d==='lvset')devSetLevel('combat',+$('dv-lv').value||1);
+  else if(d.startsWith('prof'))for(const k in SKILLS)if(k!=='combat')devSetLevel(k,+d.slice(4));
+  else if(d==='learn')p.cskills={1:1,2:1};else if(d==='skmax'){p.skp={0:skCap(),1:skCap(),2:skCap()};}else if(d==='skreset')p.skp={};else if(d==='cd'){p.cds={};p.potCd=0;}
+  else if(d.startsWith('wp')){p.weapon=+d.slice(2);rebuildPlayer();}
+  else if(d==='gold')addGold(10000);else if(d==='pots')addItem('healpot',20);else if(d==='fan')addItem('fanbox',5);else if(d==='god')p.god=!p.god;else if(d==='heal')p.hp=hpMax();
+  else if(d==='kill'){if(p.foe&&!p.foe.dead)hitMob(p.foe,1e6,true);else if(p.fight)hitWhelp(p.fight,1e6,true);}
+  else if(d==='qdone')for(const q of p.quests.slice()){if(q.type==='deliver')addItem(q.item,1);q.n=(q.need||1)-1;ev(q.type,q.type==='act'?q.match:q.match,q.npc?'Dev':undefined);if(q.type==='deliver'){const n=npcs.find(n=>n.name===q.target);const a=n&&npcActs(n).find(a=>a.label.startsWith('Turn in'));if(a)a.done();}}
+  else if(d==='needs')for(const [k] of NEEDS)p.needs[k]=100;
+  else if(d.startsWith('tp')){const k=d.slice(2),t=DEVTP[k];if(!t)enterCrypt();else{if(inCrypt())leaveCrypt();p.x=t[0]+.5;p.y=t[1]+.5+OFF;p.path=[];endTask();snapCam();}}
+  else if(d==='noon')S.time=Math.floor(S.time/1440)*1440+12*60;else if(d==='night')S.time=Math.floor(S.time/1440)*1440+23*60;else if(d==='day')S.time+=1440;
+  else if(d==='raid'){if(!S.raid)startRaid();}else if(d==='raidend'){if(S.raid)endRaid(true);}
+  else if(d==='respawn')for(const m of mobs)if(m.dead){m.respawnT=0;spawnMob(m);}
+  else if(d==='dive'){closePanel();startDive();return;}
+  else if(d==='table'){chat('<b>Monster levels</b><br>'+Object.entries(MOBDEF).sort((a,b)=>a[1].lvl-b[1].lvl).map(([k,D])=>`Lv ${D.lvl} ${D.name}${D.boss?' (boss, scales with you)':''}: ${D.hp} HP, hits ${D.dmg}, ${D.xp} XP`).join('<br>'),'sys');}
+  snd('click');buildNeeds&&buildNeeds();openDev();});}
+
 // ---------------- City Bounty Board: repeatable combat quests (each can be done once per day) ----------------
 const BOUNTIES=[
  {type:'kill',match:'kobold',need:10,manual:1,title:'Bounty: Kobold Cull',text:'The Fargodeep kobolds are back. They are always back. Defeat 10 Kobold Tunnelers.',gold:45,xp:['combat',30]},
@@ -2180,7 +2221,7 @@ function openBags(){
 }
 function openSkills(){
  S.panel='skills';
- openPanel('Skills',`<div class="row"><div class="ic">🧠</div><div class="grow"><div><b>Sanity</b> <span style="color:#5fd0c8">${Math.round(p.needs.sanity)} · ${sanLabel(p.needs.sanity)}</span></div><div class="sub">Shaken by rumors, quakes and the dark... and by the end of the world. Sleep, prayer, family and counsel steady it.</div></div></div>`+Object.entries(SKILLS).map(([k,[n,ic,d]])=>{const L=lvl(k),pr=L>=10?100:((p.xp[k]||0)%60)/60*100;return `<div class="row"><div class="ic">${ic}</div><div class="grow"><div><b>${n}</b> <span style="color:#ffd100">${L}/10</span></div><div class="sub">${d}</div><div class="sbar"><div style="width:${pr}%"></div></div></div></div>`;}).join('')+`<p class="sub" style="margin-top:10px">Racial: ${RACES[p.race].perk}<br>Class: ${CLASSES[p.cls].perk}</p>`);
+ openPanel('Skills',`<div class="row"><div class="ic">🧠</div><div class="grow"><div><b>Sanity</b> <span style="color:#5fd0c8">${Math.round(p.needs.sanity)} · ${sanLabel(p.needs.sanity)}</span></div><div class="sub">Shaken by rumors, quakes and the dark... and by the end of the world. Sleep, prayer, family and counsel steady it.</div></div></div>`+Object.entries(SKILLS).map(([k,[n,ic,d]])=>{const L=lvl(k),pr=lvProg(k)*100;return `<div class="row"><div class="ic">${ic}</div><div class="grow"><div><b>${n}</b> <span style="color:#ffd100">${L}/${MAXLV}</span></div><div class="sub">${d}</div><div class="sbar"><div style="width:${pr}%"></div></div></div></div>`;}).join('')+`<p class="sub" style="margin-top:10px">Racial: ${RACES[p.race].perk}<br>Class: ${CLASSES[p.cls].perk}</p>`);
 }
 function openFriends(){
  S.panel='friends';
@@ -2241,7 +2282,7 @@ function openFishLog(){
  const bf=['lure','bait','glowBait'].filter(buffOn).map(k=>BUFFDEF[k].icon+' '+BUFFDEF[k].name).join(', ');
  const row=k=>{const f=FISHDB[k],it=ITEMS[k],c=fl[k];return `<div class="row ${c?'':'locked'}"><div class="ic">${c?it.icon:'❔'}</div><div class="grow"><div style="color:${c?QC[it.q]:'#888'}">${c?it.name:'???'}${f.legend?' <span style="color:#ff8000">· Legendary</span>':''}</div><div class="sub">${f.hint}${f.night?' 🌙':''}</div></div><div class="sub" style="text-align:right">${c?`×${c.n}${c.best?`<br>best ${c.best} lb`:''}`:''}</div></div>`;};
  const grp=(t,w)=>`<div class="lbl" style="margin-top:10px;color:#ffd100">${t}</div>`+Object.keys(FISHDB).filter(k=>FISHDB[k].w[0]===w&&!FISHDB[k].junk).map(row).join('');
- openPanel(`Fishing Journal (${got}/${sp.length})`,`<p class="sub">🎣 Fishing ${lvl('fishing')}/10 · ${p.flags.fishTotal||0} fish caught${bf?' · '+bf:''}<br>🏆 ${dz}<br>Night fish bite 21:00–5:00. Legendary fish need Fishing 4 (Glowing Legendary Bait from Salty Pete helps a lot).</p>`
+ openPanel(`Fishing Journal (${got}/${sp.length})`,`<p class="sub">🎣 Fishing ${lvl('fishing')}/${MAXLV} · ${p.flags.fishTotal||0} fish caught${bf?' · '+bf:''}<br>🏆 ${dz}<br>Night fish bite 21:00–5:00. Legendary fish need Fishing 21 (Glowing Legendary Bait from Salty Pete helps a lot).</p>`
   +grp('Canals','canal')+grp("Lion's Rest Pond",'pond')+grp('Harbor Piers','sea')+`<div class="lbl" style="margin-top:10px;color:#ffd100">Junk</div>`+['boot','bottle'].map(row).join(''));
 }
 function openQuests(){
@@ -2298,7 +2339,7 @@ function openSaves(){S.panel='saves';save(false);const cur=localStorage.getItem(
  if($('sv-auto'))$('sv-auto').onclick=()=>{const raw=localStorage.getItem(SAVE_KEY+'.auto'),m=saveMeta(raw);ask(`Load the automatic backup (${m.name}, Day ${m.day})? Your current game will be replaced.`,()=>loadRaw(raw));};}
 function save(manual){
  if(!p)return;
- try{localStorage.setItem(SAVE_KEY,JSON.stringify({time:S.time,freeWill:S.freeWill,p:{...p,task:null,path:[],casting:null,bubble:null,hidden:false,snap:null,av:null,foe:null,fight:null,cds:{},potCd:0,abilCd:0,pet:p.pet?{race:p.pet.race}:null,vpet:null,label:null},npc:Object.fromEntries(npcs.filter(n=>!n.child).map(n=>[n.name,{rel:n.rel,love:n.love,status:n.status,san:n.san,aff:n.aff,likes:n.likes,partner:n.partner,pstat:n.pstat,known:n.known,knownF:n.knownF}]))}));if(manual){chat('Game saved.');snd('click');}}
+ try{localStorage.setItem(SAVE_KEY,JSON.stringify({time:S.time,freeWill:S.freeWill,p:{...p,task:null,path:[],casting:null,bubble:null,hidden:false,snap:null,av:null,foe:null,fight:null,huntT:null,cds:{},potCd:0,abilCd:0,pet:p.pet?{race:p.pet.race}:null,vpet:null,label:null},npc:Object.fromEntries(npcs.filter(n=>!n.child).map(n=>[n.name,{rel:n.rel,love:n.love,status:n.status,san:n.san,aff:n.aff,likes:n.likes,partner:n.partner,pstat:n.pstat,known:n.known,knownF:n.knownF}]))}));if(manual){chat('Game saved.');snd('click');}}
  catch(e){if(manual)chat('Could not save: browser storage is blocked.','err');}
 }
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
@@ -3246,6 +3287,7 @@ $('thint-ok').onclick=()=>{$('thint').hidden=true;};
 addEventListener('resize',()=>{if(IS_TOUCH&&innerWidth>innerHeight)$('thint').hidden=true;});
 
 $('b-abil').onclick=()=>useSkill(0);$('b-ab2').onclick=()=>useSkill(1);$('b-ab3').onclick=()=>useSkill(2);$('b-pot').onclick=()=>drinkPotion();
+$('b-dev').onclick=()=>openDev();$('b-dev').hidden=!DEV;
 $('b-sound').onclick=toggleVol;
 document.addEventListener('pointerdown',e=>{const el=$('volpop');if(el&&!el.contains(e.target)&&!$('b-sound').contains(e.target))el.remove();});
 let showBNames=true;
@@ -3254,6 +3296,7 @@ addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();
  if(!menu.hidden&&['arrowup','arrowdown','w','s','enter','e',' '].includes(k)){e.preventDefault();if(k==='arrowup'||k==='w')menuMove(-1);else if(k==='arrowdown'||k==='s')menuMove(1);else menuPick();return;}
  if(k==='e'&&!e.repeat){interact();return;}
+ if(k==='`'&&DEV){if(S.panel==='dev'&&!$('panel').hidden)closePanel();else openDev();return;}
  if(k==='q'&&!e.repeat&&fightOn()){useSkill(0);return;}
  if(k==='z'&&!e.repeat&&fightOn()){useSkill(1);return;}
  if(k==='x'&&!e.repeat&&fightOn()){useSkill(2);return;}
@@ -3305,7 +3348,7 @@ function updateHud(){
  if(!p)return;
  for(const [k] of NEEDS){if(k==='sanity')continue;const v=p.needs[k];$('n-'+k).style.width=v+'%';$('v-'+k).textContent=Math.round(v);}
  const m=mood();
- $('uname').textContent=p.name;$('uname').style.color=CLASSES[p.cls].color;
+ $('uname').textContent=`${p.name} · Lv ${lvl('combat')}`;$('uname').style.color=CLASSES[p.cls].color;
  $('umood').textContent=`${RACES[p.race].name} ${CLASSES[p.cls].name} · ${moodLabel(m)} · 🧠 ${sanLabel(p.needs.sanity)}`;$('umood').style.color=p.needs.sanity<20?'#c08aff':p.needs.sanity<40?'#9fd5ff':'';
  $('gold').innerHTML=`<span class="coin"></span>${p.gold}g${p.bank?` <span style="color:#b9ad95;font-weight:400">· vault ${p.bank}g</span>`:''}`;
  $('apstate').textContent=S.auto?(autoOn()?'Living their own life...':'You have control'):'';
@@ -3645,8 +3688,8 @@ function spawnWhelp(R,hp,boss){const w=makeWhelp(),a=Math.random()*Math.PI*2;w.p
  w.pick.userData.whelp=w;pickables.push(w.pick);Object.assign(w,{hp,maxhp:hp,state:'arrive',t:rand(0,3),ang:a,rad:rand(10,24),alt:rand(8,14),cool:rand(2,6),flap:Math.random()*6,hitT:0});
  if(boss){w.boss=1;w.scale.setScalar(2.6);w.rad=26;w.alt=17;w.cool=3;}whelps.push(w);return w;}
 function spawnWave(R){const ph=doom().phase,last=R.wave>=R.waves,n=R.small?R.small:Math.min(14,6+ph+R.wave);
- for(let i=0;i<n;i++)spawnWhelp(R,R.smallHp||4+Math.floor(Math.random()*3)+Math.floor(R.wave/2),false);
- if(last&&!R.small){spawnWhelp(R,40+ph*10,true);R.boss=1;}
+ for(let i=0;i<n;i++)spawnWhelp(R,Math.round((R.smallHp||4+Math.floor(Math.random()*3)+Math.floor(R.wave/2))*(1+.3*(lvl('combat')-1))),false);
+ if(last&&!R.small){spawnWhelp(R,Math.round((40+ph*10)*(1+.3*(lvl('combat')-1))),true);R.boss=1;}
  R.waveT=55;R.spawned=(R.spawned||0)+n;
  if(R.wave>1){for(let k=0;k<3;k++)setTimeout(()=>sfx('bell',.7,.9),k*700);
   raidBanner(last&&!R.small?'🐉 The Broodmother arrives! 🐉':`🐉 Wave ${R.wave} of ${R.waves}! 🐉`,last&&!R.small?'A huge black drake leads the final wave. Bring her down!':`${n} more whelps dive at ${R.name}!`);
@@ -3671,7 +3714,7 @@ function endRaid(won){
 function removeWhelp(w,flee){scene.remove(w);const i=whelps.indexOf(w);if(i>=0)whelps.splice(i,1);const k=pickables.indexOf(w.pick);if(k>=0)pickables.splice(k,1);if(p&&p.fight===w)p.fight=null;}
 function hitWhelp(w,dmg,byPlayer){w.hp-=dmg;w.hitT=.25;const tx=w.position.x/TS,ty=w.position.z/TS;sfxAt(byPlayer?'slice':'plate',tx,ty,byPlayer?.6:.4);
  {const L=mkLabel('ft');L.nm.textContent=(byPlayer?'-':'')+(Math.round(dmg*10)/10);L.nm.style.color=byPlayer?'#ffd100':'#ff8a6a';floaters.push({L,x:tx,y:ty,h:w.position.y+.6,t:1.1});}
- if(w.hp<=0){sparkle(tx,ty,0xff6a1a,w.boss?80:26);sfxAt('punch',tx,ty,.7,.8);S.raid.killed++;if(w.boss){raidBanner('The Broodmother falls!','The last whelps panic. Finish them!');chat('<b>The Black Drake Broodmother crashes into the street!</b>','ach');if(byPlayer||S.raid.mine){ach('brood');ev('brood');addGold(80);addItem('fanbox',1);}}if(byPlayer){S.raid.mine++;ev('whelp');p.flags.whelps=(p.flags.whelps||0)+1;addXp('combat',12);if(p.flags.whelps>=10)ach('whelp10');chat('You slay a dragon whelp!','loot');if(Math.random()<.4){addItem('trinket',1);}}
+ if(w.hp<=0){sparkle(tx,ty,0xff6a1a,w.boss?80:26);sfxAt('punch',tx,ty,.7,.8);S.raid.killed++;if(w.boss){raidBanner('The Broodmother falls!','The last whelps panic. Finish them!');chat('<b>The Black Drake Broodmother crashes into the street!</b>','ach');if(byPlayer||S.raid.mine){ach('brood');ev('brood');addGold(80);addItem('fanbox',1);}}if(byPlayer){S.raid.mine++;ev('whelp');p.flags.whelps=(p.flags.whelps||0)+1;addXp('combat',Math.round((5+2*lvl('combat'))*(w.boss?6:.8)));if(p.flags.whelps>=10)ach('whelp10');chat('You slay a dragon whelp!','loot');if(Math.random()<.4){addItem('trinket',1);}}
   w.state='fall';w.vy=0;}}
 function breathFire(w,x,z){const tx=x/TS,ty=z/TS;sparkle(tx,ty,0xff8a20,18);
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.glow,color:pick([0xff6a1a,0xff8a30]),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));const sc=rand(1.4,2.4);sp.scale.set(sc,sc*1.4,1);sp.position.set(x+rand(-1,1),.8,z+rand(-1,1));scene.add(sp);
@@ -3708,9 +3751,10 @@ function updateRaid(dt){
  }
  R.guardT=(R.guardT||0)-dt;if(R.guardT<=0){R.guardT=2.5;for(const nn of npcs){if(!nn.guard||!nn.av||nn.hold||nn.post)continue;const tx2=Math.floor(R.cx/TS+rand(-5,5)),ty2=Math.floor(R.cz/TS+rand(-5,5));if(passable(tx2,ty2)){const pth=findPath(Math.floor(nn.x),Math.floor(nn.y),(x,y)=>x===tx2&&y===ty2,tx2,ty2,9000);if(pth){nn.path=pth.slice(0,60);nn.wait=6;}}if(Math.random()<.15)say(nn,pick(['For Stormwind!','Hold the line!','Aim for the wings!','I\'ve got this one!']),false);}}
  // autopilot joins the defense of the city
- if(S.auto&&autoOn()&&!p.fight&&!inCrypt()&&!p.casting){R.apT=(R.apT||0)-dt;if(R.apT<=0){R.apT=2;const w=whelps.filter(w=>w.hp>0&&w.state!=='fall').sort((a,b)=>Math.hypot(a.position.x-wx(p.x),a.position.z-wz(p.y))-Math.hypot(b.position.x-wx(p.x),b.position.z-wz(p.y)))[0];
+ if(S.auto&&autoOn()&&!p.fight&&!(p.foe&&!p.foe.dead)&&!inCrypt()&&!p.casting){R.apT=(R.apT||0)-dt;if(R.apT<=0){R.apT=2;const w=whelps.filter(w=>w.hp>0&&w.state!=='fall').sort((a,b)=>Math.hypot(a.position.x-wx(p.x),a.position.z-wz(p.y))-Math.hypot(b.position.x-wx(p.x),b.position.z-wz(p.y)))[0];
   if(w){if(p.task)endTask();p.fight=w;if(!R.apSaid){R.apSaid=1;chat(`${esc(p.name)} rushes to defend the city!`,'fw');}}}}
  // you vs. the whelp you clicked
+ if(p.fight&&S.auto&&autoOn())autoCombat(dt);
  if(p.fight){const w=p.fight;if(!whelps.includes(w)||w.state==='fall'){p.fight=null;}else{
   const d=Math.hypot(wx(p.x)-w.position.x,wz(p.y)-w.position.z);R.walkT=(R.walkT||0)-dt;
   if(d>3.5&&R.walkT<=0&&!p.path.length){R.walkT=1.2;const gx=Math.floor(w.position.x/TS),gy=Math.floor(w.position.z/TS);let best=null,bd=1e9;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++)if(passable(gx+dx,gy+dy)){const dd=Math.hypot(dx,dy);if(dd<bd){bd=dd;best=[gx+dx,gy+dy];}}if(best){const pth=findPath(Math.floor(p.x),Math.floor(p.y),(x,y)=>x===best[0]&&y===best[1],best[0],best[1],9000);if(pth)p.path=pth;}}
@@ -3723,16 +3767,24 @@ function fightWhelp(w){if(!S.raid)return;p.fight=w;S.lastManual=performance.now(
 // Real-time fights: click a monster (or face it and press E / A) to attack; Q class ability; R healing potion.
 // =====================================================================
 const MOBDEF={
- kobold:{name:'Kobold Tunneler',race:'kobold',model:'Rogue',armor:'#7a5a3a',scale:.76,hp:18,dmg:4,xp:8,gold:[2,5],loot:[['candle',.55],['linen',.3]],candle:1,lvl:3},
- koboldMiner:{name:'Kobold Miner',race:'kobold',model:'Barbarian',armor:'#6a5030',scale:.82,hp:28,dmg:6,xp:11,gold:[3,7],loot:[['candle',.5],['linen',.35]],candle:1,lvl:4,gear:['1H_Axe']},
- koboldBoss:{name:'Goldtooth',race:'kobold',model:'Barbarian',armor:'#c9a24a',scale:.9,hp:130,dmg:10,xp:60,gold:[30,45],loot:[['goldtooth',1],['healpot',.5]],candle:1,lvl:6,boss:1,gear:['2H_Axe'],resp:300},
- defias:{name:'Defias Thug',model:'Rogue',armor:'#a02a20',scale:.95,hp:32,dmg:5,xp:12,gold:[4,9],loot:[['linen',.4],['trinket',.06]],lvl:5,city:1,passive:1,gear:['Knife'],resp:180},
- defiasSmuggler:{name:'Defias Smuggler',model:'Rogue',armor:'#5a1a18',scale:1,hp:44,dmg:7,xp:16,gold:[6,12],loot:[['linen',.3],['supplies',.2],['pearl',.05]],lvl:6,city:1,passive:1,gear:['Knife','Knife_Offhand'],resp:200},
- skelMinion:{name:'Skeleton Minion',model:'Skeleton_Minion',scale:1,hp:30,dmg:7,xp:12,gold:[3,8],loot:[['bone',.6],['linen',.3]],lvl:6,crypt:1},
- skelWarrior:{name:'Skeleton Warrior',model:'Skeleton_Warrior',scale:1.05,hp:52,dmg:11,xp:18,gold:[5,11],loot:[['bone',.7],['essence',.08]],lvl:8,crypt:1},
- skelMage:{name:'Skeleton Mage',model:'Skeleton_Mage',scale:1,hp:36,dmg:9,xp:16,gold:[4,10],loot:[['bone',.5],['essence',.12]],lvl:7,ranged:1,crypt:1},
- cryptBoss:{name:'Grave Lord Mortimer',model:'Skeleton_Mage',scale:1.55,hp:300,dmg:16,xp:120,gold:[60,100],loot:[['mortSkull',1],['essence',1],['healpot',1]],lvl:10,boss:1,ranged:1,crypt:1,resp:420},
+ kobold:{name:'Kobold Tunneler',race:'kobold',model:'Rogue',armor:'#7a5a3a',scale:.76,hp:18,dmg:4,xp:8,gold:[2,5],loot:[['candle',.55],['linen',.3]],candle:1,lvl:2},
+ koboldMiner:{hpM:1.2,name:'Kobold Miner',race:'kobold',model:'Barbarian',armor:'#6a5030',scale:.82,hp:28,dmg:6,xp:11,gold:[3,7],loot:[['candle',.5],['linen',.35]],candle:1,lvl:6,gear:['1H_Axe']},
+ koboldBoss:{name:'Goldtooth',race:'kobold',model:'Barbarian',armor:'#c9a24a',scale:.9,hp:130,dmg:10,xp:60,gold:[30,45],loot:[['goldtooth',1],['healpot',.5]],candle:1,lvl:10,boss:1,gear:['2H_Axe'],resp:300},
+ defias:{name:'Defias Thug',model:'Rogue',armor:'#a02a20',scale:.95,hp:32,dmg:5,xp:12,gold:[4,9],loot:[['linen',.4],['trinket',.06]],lvl:14,city:1,passive:1,gear:['Knife'],resp:180},
+ defiasSmuggler:{hpM:1.1,name:'Defias Smuggler',model:'Rogue',armor:'#5a1a18',scale:1,hp:44,dmg:7,xp:16,gold:[6,12],loot:[['linen',.3],['supplies',.2],['pearl',.05]],lvl:18,city:1,passive:1,gear:['Knife','Knife_Offhand'],resp:200},
+ skelMinion:{name:'Skeleton Minion',model:'Skeleton_Minion',scale:1,hp:30,dmg:7,xp:12,gold:[3,8],loot:[['bone',.6],['linen',.3]],lvl:24,crypt:1},
+ skelWarrior:{hpM:1.25,name:'Skeleton Warrior',model:'Skeleton_Warrior',scale:1.05,hp:52,dmg:11,xp:18,gold:[5,11],loot:[['bone',.7],['essence',.08]],lvl:36,crypt:1},
+ skelMage:{hpM:0.8,name:'Skeleton Mage',model:'Skeleton_Mage',scale:1,hp:36,dmg:9,xp:16,gold:[4,10],loot:[['bone',.5],['essence',.12]],lvl:30,ranged:1,crypt:1},
+ cryptBoss:{name:'Grave Lord Mortimer',model:'Skeleton_Mage',scale:1.55,hp:300,dmg:16,xp:120,gold:[60,100],loot:[['mortSkull',1],['essence',1],['healpot',1]],lvl:42,boss:1,ranged:1,crypt:1,resp:420},
 };
+// monster stats come from their level: a same-level fight lasts ~6-10 s and costs ~25-40% of your health; bosses ~30-40 s (a potion or two)
+function mobStats(L,D){const w=[1,1.25,1.5,1.85,2.3][Math.min(4,Math.floor((L-1)/12))],pd=(4+1.2*L)*w/1.1*1.35,php=100+14*L;
+ return {hp:Math.round((4+1.2*L)*w*(8+4*Math.min(1,L/20))*(D.hpM||1)*(D.boss?4:1)),dmg:Math.max(2,Math.round(.025*php*(D.ranged?2.2:1.6)*(D.dmgM||1)*(D.boss?.9:1))),xp:Math.round((5+2*L)*(D.boss?6:1))};}
+for(const k in MOBDEF){const D=MOBDEF[k];D.baseLvl=D.lvl;Object.assign(D,mobStats(D.lvl,D));}
+const mobLvl=m=>MOBDEF[m.type||m].lvl;
+// the gap between your level and the monster's changes how hard you hit each other
+const lvGap=m=>mobLvl(m)-lvl('combat');
+const xpFor=m=>{const g=-lvGap(m);return Math.round(MOBDEF[m.type].xp*(g>=10?.1:g>=6?.4:1));};
 const MOBSPAWN=[['kobold',6,50],['kobold',9,52],['kobold',12,49],['kobold',15,51],['kobold',8,56],['kobold',13,56],['kobold',17,57],['koboldMiner',4,53],['koboldMiner',17,54],['koboldMiner',10,48],['koboldBoss',3,49],
  ['skelMinion',146,6],['skelMinion',150,9],['skelMinion',155,7],['skelMinion',148,15],['skelMinion',154,15],['skelMinion',151,24],
  ['skelWarrior',143,31],['skelWarrior',150,35],['skelWarrior',158,32],['skelWarrior',145,38],['skelWarrior',157,38],['skelMinion',152,30],['skelMinion',160,36],
@@ -3744,7 +3796,7 @@ const hpMax=()=>100+lvl('combat')*14;
 const inDungeon=()=>{if(!p)return false;const z=zoneAt(p.x,p.y);return z==='Fargodeep Camp'||z==='The Catacombs';};
 const inCrypt=()=>!!p&&p.x>=MW;
 const fightOn=()=>inDungeon()||!!(p&&(p.foe||p.fight));
-function spawnMob(m){const D=MOBDEF[m.type];m.hp=D.hp;m.x=m.hx;m.y=m.hy;m.dead=false;m.state='idle';m.cd=rand(.5,1.5);m.wanderT=rand(1,4);m.yaw=rand(0,6.28);m.path=[];
+function spawnMob(m){const D=MOBDEF[m.type];if(D.boss&&p){const L=Math.max(D.baseLvl,lvl('combat'));if(L!==D.lvl){D.lvl=L;Object.assign(D,mobStats(L,D));}}m.hp=D.hp;m.x=m.hx;m.y=m.hy;m.dead=false;m.state='idle';m.cd=rand(.5,1.5);m.wanderT=rand(1,4);m.yaw=rand(0,6.28);m.path=[];
  if(!m.av){const av=makeAvatar({model:D.model,race:D.race||'human',armor:D.armor,gear:D.gear||[]});av.group.scale.multiplyScalar(D.scale);scene.add(av.group);m.av=av;
   if(D.candle&&av.headBone){const c=new THREE.Group();c.add(meshAt(new THREE.CylinderGeometry(.06,.07,.22,8),new THREE.MeshStandardMaterial({color:0xf3ead2}),0,0,0));const fl=meshAt(new THREE.ConeGeometry(.05,.12,6),MAT.fire,0,.17,0);c.add(fl);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX.glow,color:0xffc060,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.9}));sp.scale.set(.6,.6,1);sp.position.y=.18;c.add(sp);c.position.set(0,.42,0);av.headBone.add(c);}
   const pk=new THREE.Mesh(new THREE.CylinderGeometry(.7*Math.max(1,D.scale),.7,2.2*D.scale,8),MAT.pick);pk.position.y=1;pk.userData.mob=m;av.group.add(pk);pickables.push(pk);m.pick=pk;
@@ -3770,20 +3822,20 @@ function enterCrypt(){S.lastManual=performance.now();p.x=124.5;p.y=10.5+OFF;p.pa
 function leaveCrypt(){const o=objNamed('Catacomb Entrance');p.x=o.cx;p.y=o.cy+1.8;p.path=[];p.foe=null;snapCam();sfx('doorClose',.6);chat('You climb back into the daylight of the Cathedral gardens.','sys');}
 function engageMob(m){if(!m||m.dead)return;p.foe=m;S.lastManual=performance.now();if(p.task)endTask();}
 function dmgFloat(text,x,y,h,col){const L=mkLabel('ft');L.nm.textContent=text;L.nm.style.color=col;floaters.push({L,x,y,h,t:1});}
-function hurtPlayer(n,src){if(p.shield>0){const a=Math.min(p.shield,n);p.shield-=a;n=Math.round(n-a);if(a>0)dmgFloat('absorbed',p.x,p.y,2.6,'#9fd5ff');if(n<=0)return;}p.hp=Math.max(0,(p.hp==null?hpMax():p.hp)-n);p.lastHit=performance.now();dmgFloat('-'+n,p.x,p.y,2.4,'#ff4a3a');sfx('punch',.4,.9);if(DFX)DFX.shake=Math.max(DFX.shake||0,.25);if(p.hp<=0)playerDefeated();}
-function hitMob(m,n,crit){m.hp-=n;dmgFloat((crit?'✦':'')+Math.round(n),m.x,m.y,2.6*MOBDEF[m.type].scale+.3,crit?'#ffd100':'#fff');sfxAt(RANGED_CLS.includes(p.cls)?'thud':'slice',m.x,m.y,.55);
+function hurtPlayer(n,src){if(p.god)return;if(p.shield>0){const a=Math.min(p.shield,n);p.shield-=a;n=Math.round(n-a);if(a>0)dmgFloat('absorbed',p.x,p.y,2.6,'#9fd5ff');if(n<=0)return;}p.hp=Math.max(0,(p.hp==null?hpMax():p.hp)-n);p.lastHit=performance.now();dmgFloat('-'+n,p.x,p.y,2.4,'#ff4a3a');sfx('punch',.4,.9);if(DFX)DFX.shake=Math.max(DFX.shake||0,.25);if(p.hp<=0)playerDefeated();}
+function hitMob(m,n,crit){n*=clamp(1-.04*lvGap(m),.5,1.25);if(!m.fightStart)m.fightStart=performance.now();m.hp-=n;dmgFloat((crit?'✦':'')+Math.round(n),m.x,m.y,2.6*MOBDEF[m.type].scale+.3,crit?'#ffd100':'#fff');sfxAt(RANGED_CLS.includes(p.cls)?'thud':'slice',m.x,m.y,.55);
  if(m.state==='idle'||m.state==='return')m.state='chase';if(m.av&&m.av.actions.Hit_A&&Math.random()<.4){m.av.play('Hit_A',.05);m.hitT=.35;}
  if(m.hp<=0)killMob(m);}
-function killMob(m){const D=MOBDEF[m.type];m.dead=true;m.respawnT=D.resp||90;m.state='dead';m.av.play(m.av.actions.Death_A?'Death_A':'Idle',.1);const a=m.av.actions.Death_A;if(a){a.setLoop(THREE.LoopOnce);a.clampWhenFinished=true;}
+function killMob(m){const D=MOBDEF[m.type];if(S.auto&&p.huntN>0&&m.type===p.huntType){p.huntN--;setTimeout(()=>{if(!p||p.foe&&!p.foe.dead||(p.hp||0)<hpMax()*.45)return;const nx=mobs.filter(o=>!o.dead&&o.type===m.type&&(o.hx>=MW)===(m.hx>=MW)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];if(nx&&Math.hypot(nx.x-p.x,nx.y-p.y)<20){p.foe=nx;if(nx.state==='idle')nx.state='chase';}},1500);}if(DEV&&m.fightStart){chat(`🛠 ${D.name} (Lv ${D.lvl}) died in ${((performance.now()-m.fightStart)/1000).toFixed(1)} s. You lost ${Math.round(m.hurt||0)} HP (${Math.round((m.hurt||0)/hpMax()*100)}%).`,'sys');}m.fightStart=0;m.hurt=0;m.dead=true;m.respawnT=D.resp||90;m.state='dead';m.av.play(m.av.actions.Death_A?'Death_A':'Idle',.1);const a=m.av.actions.Death_A;if(a){a.setLoop(THREE.LoopOnce);a.clampWhenFinished=true;}
  m.lbl.el.style.display='none';if(p.foe===m)p.foe=null;
- addXp('combat',D.xp);const g=Math.round(rand(D.gold[0],D.gold[1]+1));p.gold+=g;sfx('coins',.4);dmgFloat(`+${g}g`,m.x,m.y,1.6,'#ffd100');
+ addXp('combat',xpFor(m));const g=Math.round(rand(D.gold[0],D.gold[1]+1));p.gold+=g;sfx('coins',.4);dmgFloat(`+${g}g`,m.x,m.y,1.6,'#ffd100');
  for(const [it,ch] of D.loot)if(Math.random()<ch){addItem(it,1);ev('loot',it);}
  ev('kill',m.type);p.flags.kills=(p.flags.kills||0)+1;
  if(m.type.startsWith('kobold')){p.flags.kobolds=(p.flags.kobolds||0)+1;if(p.flags.kobolds>=20)ach('candle');}
  if(m.type==='koboldBoss'){ach('goldtooth');qBanner('Goldtooth defeated!','The kobolds of Fargodeep scatter');prepAdd('def',6,'boss');}
  if(m.type==='cryptBoss'){ach('mortimer');qBanner('Grave Lord Mortimer defeated!','The Catacombs fall silent... for now');prepAdd('def',10,'boss');}
  if(p.flags.kills%10===0)prepAdd('def',2,'dungeon');}
-function playerDefeated(){const cr=inCrypt();p.foe=null;p.hp=Math.round(hpMax()*.5);const fee=Math.min(50,Math.round(p.gold*.1));p.gold-=fee;p.needs.sanity=clamp(p.needs.sanity-10,0,100);ach('deaths');
+function playerDefeated(){const cr=inCrypt();p.foe=null;p.huntN=0;p.huntT=null;p.flags.deathAt=S.time;p.hp=Math.round(hpMax()*.5);const fee=Math.min(50,Math.round(p.gold*.1));p.gold-=fee;p.needs.sanity=clamp(p.needs.sanity-10,0,100);ach('deaths');
  for(const m of mobs)if(!m.dead&&(m.state==='chase'||m.state==='attack')){m.state='return';}
  if(cr){p.x=124.5;p.y=10.5+OFF;}else{p.x=18.5;p.y=63.5+OFF;}p.path=[];snapCam();
  qBanner('You have been defeated!',`A spirit healer patches you up${fee?` (${fee}g fee)`:''}.`);chat(`💀 You were defeated${cr?' in the Catacombs':' at Fargodeep Camp'}. You wake up at the ${cr?'bottom of the stairs':'main gate'}, aching${fee?` and ${fee}g lighter`:''}.`,'err');sfx('thud',.7,.7);}
@@ -3802,7 +3854,7 @@ const CSK={
  shaman:[['⚡','Lightning Bolt',{dmg:2.6,ranged:1},8,'Ranged: a bolt of lightning.'],['🌩️','Stormstrike',{dmg:2.6,melee:1},10,'Melee: an axe blow charged with storm.'],['⛓️','Chain Lightning',{dmg:1.8,aoe:5,max:4,around:'target',ranged:1},12,'Area: lightning jumps to up to 4 enemies.']],
  druid:[['🌙','Moonfire',{dmg:1.4,dot:4,ranged:1},8,'Ranged: moonlight burns your target, then keeps burning.'],['🐻','Maul',{dmg:2.6,melee:1},8,'Melee: turn into a bear (briefly) and maul your target.'],['🍃','Swipe',{dmg:1.7,aoe:3.5},12,'Area: claws hit everything around you.']],
 };
-const SKTRAIN=[null,[3,120],[5,350]];   // [combat level, gold] to learn skill 2 and 3
+const SKTRAIN=[null,[10,150],[20,400]];   // [combat level, gold] to learn skill 2 and 3
 const SKKEY=['Q','Z','X'],SKSLOT=['b-abil','b-ab2','b-ab3'],SKIC=['abil-ic','ab2-ic','ab3-ic'],SKCD=['abilcd','ab2cd','ab3cd'];
 const skills=()=>CSK[p.cls]||CSK.warrior;
 const knowsSkill=i=>i===0||!!(p.cskills&&p.cskills[i]);
@@ -3810,17 +3862,22 @@ function enemiesNear(cx,cy,r){const out=[],cr=inCrypt();for(const m of mobs)if(!
  for(const w of whelps)if(w.hp>0&&w.state!=='fall'&&w.position.y<6&&Math.hypot(w.position.x/TS-cx,w.position.z/TS-cy)<r)out.push(w);
  return out.sort((a,b)=>Math.hypot(ex(a)-cx,ey(a)-cy)-Math.hypot(ex(b)-cx,ey(b)-cy));}
 const ex=e=>e.isMob?e.x:e.position.x/TS,ey=e=>e.isMob?e.y:e.position.z/TS;
-function useSkill(i){if(!p||!S.running)return;const L=skills(),sk=L[i];if(!sk)return;const [ic,name,e,cd]=sk;
- if(!knowsSkill(i)){const tr=npcs.find(n=>n.trainer===p.cls);chat(`You haven't learned ${name} yet. Train it with ${tr?tr.name:'your class trainer'} (Combat ${SKTRAIN[i][0]}, ${SKTRAIN[i][1]}g).`,'err');return;}
- p.cds=p.cds||{};const now=performance.now();if((p.cds[i]||0)>now){chat(`${name} is not ready yet.`,'err');return;}
+// skill points: +1 each time you use a skill, up to 5 x your level (300 at level 60). Rank I-VI every 60 points.
+const skCap=()=>5*lvl('combat'),skPts=i=>Math.max(1,(p.skp&&p.skp[i])||1),skRank=i=>Math.min(6,1+Math.floor(skPts(i)/60)),ROMAN=['','I','II','III','IV','V','VI'];
+const skMult=i=>.8+.4*Math.min(1,skPts(i)/skCap())+.08*(skRank(i)-1);
+function skillUp(i){p.skp=p.skp||{};const pts=skPts(i),cap=skCap();if(pts>=cap)return;const before=skRank(i);p.skp[i]=pts+(pts<cap*.5?2:1);if(p.skp[i]>cap)p.skp[i]=cap;
+ if(skRank(i)>before){const sk=skills()[i];qBanner('Skill Rank Up!',`${sk[1]} Rank ${ROMAN[skRank(i)]}`);chat(`📈 ${sk[0]} <b>${sk[1]}</b> is now <b>Rank ${ROMAN[skRank(i)]}</b>.`,'ach');sfx('levelup',.5);}}
+function useSkill(i,quiet){if(!p||!S.running)return;const L=skills(),sk=L[i];if(!sk)return;const [ic,name,e,cd]=sk;
+ if(!knowsSkill(i)){if(quiet)return false;const tr=npcs.find(n=>n.trainer===p.cls);chat(`You haven't learned ${name} yet. Train it with ${tr?tr.name:'your class trainer'} (Combat ${SKTRAIN[i][0]}, ${SKTRAIN[i][1]}g).`,'err');return;}
+ p.cds=p.cds||{};const now=performance.now();if((p.cds[i]||0)>now){if(!quiet)chat(`${name} is not ready yet.`,'err');return false;}
  const t=p.foe&&!p.foe.dead?p.foe:(p.fight&&whelps.includes(p.fight)&&p.fight.state!=='fall'?p.fight:null);
  const needT=!e.self&&!(e.aoe&&e.around!=='target');
- if(needT&&!t){chat('No target. Click a monster, thug or whelp first.','err');return;}
+ if(needT&&!t){if(!quiet)chat('No target. Click a monster, thug or whelp first.','err');return false;}
  const ranged=RANGED_CLS.includes(p.cls);
- if(t&&!e.self){const d=Math.hypot(ex(t)-p.x,ey(t)-p.y),rng=(e.range||(e.melee?2.4:e.ranged?8:ranged?7:2.4))+(t.isMob?0:2.5);if(d>rng){chat('Too far away.','err');return;}
+ if(t&&!e.self){const d=Math.hypot(ex(t)-p.x,ey(t)-p.y),rng=(e.range||(e.melee?2.4:e.ranged?8:ranged?7:2.4))+(t.isMob?0:2.5);if(d>rng){if(!quiet)chat('Too far away.','err');return false;}
   if(e.charge){const dx=ex(t)-p.x,dy=ey(t)-p.y,L2=Math.hypot(dx,dy)||1;const nx=ex(t)-dx/L2*1.2,ny=ey(t)-dy/L2*1.2;if(passable(Math.floor(nx),Math.floor(ny))){p.x=nx;p.y=ny;p.path=[];}sparkle(p.x,p.y,0xffd27a,18);}}
  p.cds[i]=now+cd*1000;p.atkT=.6;p.atkAnim=e.melee?'2H_Melee_Attack_Chop':e.ranged?(p.cls==='hunter'?'2H_Ranged_Shoot':p.cls==='warrior'||p.cls==='rogue'?'Throw':'Spellcast_Shoot'):e.aoe?'2H_Melee_Spin':'Spellcast_Shoot';if(p.av&&!p.av.actions[p.atkAnim])p.atkAnim=e.melee?'1H_Melee_Attack_Slice_Diagonal':'Spellcast_Shoot';
- const base=(4+lvl('combat')*1.3)*wpnMult(),hit=(x,n)=>{if(x.isMob)hitMob(x,n,true);else if(S.raid)hitWhelp(x,n*.3,true);};
+ const base=(4+lvl('combat')*1.3)*wpnMult()*skMult(i),hit=(x,n)=>{if(x.isMob)hitMob(x,n,true);else if(S.raid)hitWhelp(x,n*.3,true);};
  let hitList=[];
  if(e.aoe){const cx=e.around==='target'&&t?ex(t):p.x,cy=e.around==='target'&&t?ey(t):p.y;hitList=enemiesNear(cx,cy,e.aoe).slice(0,e.max||12);if(e.around==='target'&&t&&!hitList.includes(t))hitList.unshift(t);}
  else if(t&&!e.self)hitList=[t];
@@ -3828,14 +3885,34 @@ function useSkill(i){if(!p||!S.running)return;const L=skills(),sk=L[i];if(!sk)re
  if(e.dot&&t&&t.isMob){t.dot={t:1,left:e.dot,n:base*e.dmg};hitMob(t,base*e.dmg,false);}else if(e.dot&&t)hit(t,base*e.dmg*e.dot*.6);
  if(e.stun)for(const x of hitList)if(x.isMob){x.stunT=e.stun;if(e.poly)dmgFloat('🐑 Baa!',x.x,x.y,2.6,'#ffffff');}else x.cool=(x.cool||0)+e.stun;
  if(e.drain&&t){const h=Math.round(base*e.dmg*.6);p.hp=Math.min(hpMax(),(p.hp||0)+h);dmgFloat('+'+h,p.x,p.y,2.4,'#5aff7a');}
- if(e.heal){const h=Math.round(hpMax()*e.heal);p.hp=Math.min(hpMax(),(p.hp||0)+h);dmgFloat('+'+h,p.x,p.y,2.4,'#5aff7a');sparkle(p.x,p.y,0xfff3a0,24);}
+ skillUp(i);
+ if(e.heal){const h=Math.round(hpMax()*e.heal*skMult(i));p.hp=Math.min(hpMax(),(p.hp||0)+h);dmgFloat('+'+h,p.x,p.y,2.4,'#5aff7a');sparkle(p.x,p.y,0xfff3a0,24);}
  if(e.hot)p.hot={t:1,left:5,amt:hpMax()*e.hot/5};
  if(e.shield){p.shield=Math.round(hpMax()*e.shield);p.shieldT=12;dmgFloat('🛡️ Shield',p.x,p.y,2.8,'#9fd5ff');}
  if(e.vanish){for(const m of mobs)if(!m.dead&&m.state!=='idle')m.state='return';p.foe=null;p.fight=null;p.hidden=true;setTimeout(()=>{if(p)p.hidden=false;},1500);sparkle(p.x,p.y,0x9a9a9a,30);}
  const col={warrior:0xffd27a,paladin:0xfff3a0,hunter:0xaad372,rogue:0xfff468,priest:0xffffff,mage:e.stun?0x9fe0ff:0xff6a20,warlock:0x9a4aff,shaman:0x7ab0ff,druid:0x7aff9a}[p.cls]||0xffffff;
  for(const x of hitList)sparkle(ex(x),ey(x),col,e.aoe?12:22);if(e.aoe&&!t)sparkle(p.x,p.y,col,30);
- floatText(name,'#ffd100');sfx(e.aoe?'anvil':e.ranged?'draw':'slice',.5,1);if(e.heal)sfx('confirm',.35,1.4);}
+ floatText(name,'#ffd100');if(quiet)return true;sfx(e.aoe?'anvil':e.ranged?'draw':'slice',.5,1);if(e.heal)sfx('confirm',.35,1.4);}
 function useAbility(){useSkill(0);}
+let acT=0;
+function autoCombat(dt){acT-=dt;if(acT>0)return;acT=.45;const now=performance.now();
+ if(p.hp<hpMax()*.35&&p.items.healpot>0&&!(p.potCd>now)){drinkPotion();return;}
+ for(const i of [2,0,1])if(knowsSkill(i)&&!((p.cds||{})[i]>now)&&useSkill(i,true))return;}
+// autopilot goes hunting: quest/bounty targets it can handle, otherwise monsters near its level
+function combatAI(){const L=lvl('combat'),since=S.time-(p.flags.deathAt||-1e9);if(since<360)return false;const maxL=since<1440?L:L+2;if(p.needs.energy<25||p.needs.hunger<25||(p.hp!=null&&p.hp<hpMax()*.6))return false;
+ let types=[];for(const q of p.quests){if(q.type==='kill'&&MOBDEF[q.match])types.push(q.match);if(q.type==='loot')for(const k in MOBDEF)if(MOBDEF[k].loot.some(l=>l[0]===q.match))types.push(k);}
+ types=types.filter(t=>mobLvl(t)<=maxL+1);
+ if(!types.length)types=Object.keys(MOBDEF).filter(k=>!MOBDEF[k].boss&&MOBDEF[k].lvl<=maxL&&MOBDEF[k].lvl>=L-9);
+ if(!types.length)return false;
+ const crowd=m=>mobs.filter(o=>o!==m&&!o.dead&&!MOBDEF[o.type].passive&&Math.hypot(o.x-m.x,o.y-m.y)<5.5).length;const m=mobs.filter(m=>!m.dead&&types.includes(m.type)).sort((a,b)=>(crowd(a)*12+Math.hypot(a.x-p.x,a.y-p.y))-(crowd(b)*12+Math.hypot(b.x-p.x,b.y-p.y)))[0];if(!m)return false;
+ const crypt=m.hx>=MW;if(crypt&&!inCrypt())return tryAct(objNamed('Catacomb Entrance'),'Enter the Catacombs');if(!crypt&&inCrypt())return tryAct(objNamed('Stairs to the Surface'),'Climb Back Up');
+ endTask();p.huntN=3+Math.floor(Math.random()*4);p.huntType=m.type;const far=Math.hypot(m.x-p.x,m.y-p.y)>10;if(far){walkNear(m.x,m.y);if(!p.path.length)return false;p.huntT=m;}else{p.foe=m;if(m.state==='idle')m.state='chase';}chat(`${esc(p.name)} goes hunting: ${MOBDEF[m.type].name}.`,'fw');return true;}
+// autopilot shopping: train class skills, upgrade weapons, keep a few potions
+function gearAI(){const L=lvl('combat');
+ for(const i of [1,2])if(!knowsSkill(i)&&L>=SKTRAIN[i][0]&&p.gold>=SKTRAIN[i][1]+60&&(i===1||knowsSkill(1))){const tr=npcs.find(n=>n.trainer===p.cls);if(tr&&tryNpc(tr,'Train'))return true;}
+ const nx=(p.weapon||0)+1;if(WEAPON_TIERS[nx]&&p.gold>=WEAPON_TIERS[nx][1]+150&&L>=nx*10){const wm=npcs.find(n=>n.weaponMaster);if(wm&&tryNpc(wm,'Upgrade'))return true;}
+ if((p.items.healpot||0)<2&&p.gold>=55)return tryCustom(objNamed("Bartholomew's Goods"),{label:'Buy Healing Potions',mins:5,done(){const n=Math.min(3,Math.floor((p.gold-40)/20));if(n>0){p.gold-=n*20;addItem('healpot',n);}}});
+ return false;}
 
 const mobFree=(x,y)=>passable(Math.floor(x),Math.floor(y))||tileAt(Math.floor(x),Math.floor(y))===G;
 function moveMob(m,tx,ty,spd,dt){const dx=tx-m.x,dy=ty-m.y,L=Math.hypot(dx,dy);if(L<.05)return false;const st=Math.min(L,spd*dt),nx=m.x+dx/L*st,ny=m.y+dy/L*st;
@@ -3847,11 +3924,11 @@ function updateDungeon(dt){
  // HUD
  {const show=inD||p.foe||p.fight||p.hp<hm;$('hprow').hidden=!show;if(show){$('hpfill').style.width=(p.hp/hm*100)+'%';$('hpval').textContent=Math.round(p.hp);}
   {const on=inD||!!p.foe||!!p.fight;$('b-pot').hidden=!on;$('potn').textContent=p.items.healpot||0;const L=skills(),now=performance.now();
-   L.forEach((sk,i)=>{const el=$(SKSLOT[i]);el.hidden=!on||!knowsSkill(i);if(el.hidden)return;$(SKIC[i]).textContent=sk[0];el.dataset.tip=`<b>${sk[1]}</b> (${SKKEY[i]}${i===0?' / X on a controller':''})<br>${sk[4]} ${sk[3]} second cooldown.`;
+   L.forEach((sk,i)=>{const el=$(SKSLOT[i]);el.hidden=!on||!knowsSkill(i);if(el.hidden)return;$(SKIC[i]).textContent=sk[0];el.dataset.tip=`<b>${sk[1]}</b> <span style='color:#ffd100'>Rank ${ROMAN[skRank(i)]}</span> · skill ${skPts(i)}/${skCap()} (${SKKEY[i]}${i===0?' / X on a controller':''})<br>${sk[4]} ${sk[3]} second cooldown.`;
     const cd=Math.max(0,((p.cds||{})[i]||0)-now)/(sk[3]*1000);$(SKCD[i]).style.background=cd>0?`conic-gradient(rgba(0,0,0,.7) ${cd*360}deg,transparent 0)`:'none';});}
   const f=p.foe,wf=!f&&p.fight&&whelps.includes(p.fight)?p.fight:null;$('tframe').hidden=!f&&!wf;
   if(wf){$('tname').innerHTML=`<span>${wf.boss?'Black Drake Broodmother 💀':'Black Dragon Whelp'}</span><small>${wf.boss?'Level 10 Elite':'Level 5'}</small>`;$('tfill').style.width=Math.max(0,wf.hp/wf.maxhp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(wf.hp))} / ${wf.maxhp}`;}
-  if(f){const D=MOBDEF[f.type];$('tname').innerHTML=`<span>${esc(D.name)}${D.boss?' 💀':''}</span><small>Level ${D.lvl}${D.boss?' Elite':''}</small>`;$('tfill').style.width=Math.max(0,f.hp/D.hp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(f.hp))} / ${D.hp}`;}}
+  if(f){const D=MOBDEF[f.type];$('tname').innerHTML=`<span>${esc(D.name)}${D.boss?' 💀':''}</span><small style="color:${lvGap(f)>=5?'#ff5a4a':lvGap(f)>=3?'#ff9a3a':lvGap(f)<=-10?'#9d9d9d':'#ffd100'}">Level ${D.lvl}${D.boss?' Elite':''}</small>`;$('tfill').style.width=Math.max(0,f.hp/D.hp*100)+'%';$('thp').textContent=`${Math.max(0,Math.ceil(f.hp))} / ${D.hp}`;}}
  // out-of-combat regen
  const inCombat=performance.now()-(p.lastHit||0)<5000||!!p.foe;if(!inCombat&&p.hp<hm)p.hp=Math.min(hm,p.hp+hm*.08*dt);
  if(p.atkT>0)p.atkT-=dt;
@@ -3865,7 +3942,7 @@ function updateDungeon(dt){
   if(m.dot){m.dot.t-=dt;if(m.dot.t<=0){m.dot.t=1;hitMob(m,m.dot.n,false);if(--m.dot.left<=0||m.dead)m.dot=null;if(m.dead)continue;}}
   const d=Math.hypot(p.x-m.x,p.y-m.y),far=d>45;if(far&&m.state==='idle'){m.lbl.el.style.display='none';continue;}
   const sameArea=inCrypt()===(m.hx>=MW);
-  if(m.state==='idle'){if(sameArea&&!D.passive&&d<(D.boss?7:6)&&!p.hidden){m.state='chase';m.av.play('Idle_Combat'in m.av.actions?'Idle_Combat':'Idle',.1);if(Math.random()<.5)sfxAt(D.crypt?'creak':'pluck',m.x,m.y,.5,.7);}
+  if(m.state==='idle'){if(sameArea&&!D.passive&&d<(D.boss?6.5:5)&&!p.hidden){m.state='chase';m.av.play('Idle_Combat'in m.av.actions?'Idle_Combat':'Idle',.1);if(Math.random()<.5)sfxAt(D.crypt?'creak':'pluck',m.x,m.y,.5,.7);}
    else{m.wanderT-=dt;if(m.wanderT<=0){m.wanderT=rand(3,7);m.wx=m.hx+rand(-2,2);m.wy=m.hy+rand(-2,2);}if(m.wx!=null&&moveMob(m,m.wx,m.wy,.9,dt))m.av.play('Walking_A');else m.av.play('Idle');}}
   else if(m.state==='return'){if(!moveMob(m,m.hx,m.hy,4,dt)||Math.hypot(m.hx-m.x,m.hy-m.y)<.4){m.state='idle';m.hp=D.hp;}m.av.play('Running_A');}
   else if(m.stunT>0){m.stunT-=dt;m.av.play('Idle');}
@@ -3875,11 +3952,14 @@ function updateDungeon(dt){
    if(d>rng){moveMob(m,p.x,p.y,D.boss?2.8:3.2,dt);m.av.play('Running_A');}
    else{m.yaw=Math.atan2(p.x-m.x,p.y-m.y);m.cd-=dt;if(m.hitT>0)m.hitT-=dt;else m.av.play(D.ranged?'2H_Ranged_Aiming'in m.av.actions?'Idle_Combat':'Idle_Combat':'Idle_Combat');
     if(m.cd<=0){m.cd=D.ranged?2.2:1.6;m.av.play(D.ranged?'Spellcast_Shoot'in m.av.actions?'Spellcast_Shoot':'1H_Melee_Attack_Chop':'1H_Melee_Attack_Chop',.05);m.hitT=.5;
-     if(D.ranged)sparkle(p.x,p.y,D.boss?0x9a4aff:0x7ab0ff,10);const n=Math.round(D.dmg*rand(.8,1.2));hurtPlayer(n,m);if(!p.foe&&!p.task)p.foe=m;}}}
+     if(D.ranged)sparkle(p.x,p.y,D.boss?0x9a4aff:0x7ab0ff,10);const n=Math.round(D.dmg*rand(.8,1.2)*clamp(1+.06*lvGap(m),.6,2));if(!p.god)m.hurt=(m.hurt||0)+n;hurtPlayer(n,m);if(!p.foe&&!p.task)p.foe=m;}}}
   // nameplate
   if(placeLabel(m.lbl,wx(m.x),2.3*D.scale+.4,wz(m.y),40)){m.lbl.nm.textContent=`${D.name}${D.boss?' 💀':''}`;m.lbl.nm.style.color=D.passive&&m.state==='idle'?'#ffd100':'';m.lbl.hb.style.width=Math.max(0,m.hp/D.hp*100)+'%';}}
  // you vs. your target
- const f=p.foe;if(f&&!f.dead){const d=Math.hypot(f.x-p.x,f.y-p.y),rng=RANGED_CLS.includes(p.cls)?6:1.7;dungT-=dt;
+ if(S.auto&&autoOn()&&(p.foe||p.fight))autoCombat(dt);
+ if(p.huntT&&!p.path.length){const m=p.huntT;p.huntT=null;if(!m.dead&&Math.hypot(m.x-p.x,m.y-p.y)<14){p.foe=m;if(m.state==='idle')m.state='chase';}}
+ const f=p.foe;if(f&&!f.dead&&Math.hypot(f.x-p.x,f.y-p.y)>45&&!p.path.length)p.foe=null;
+ if(f&&!f.dead){const d=Math.hypot(f.x-p.x,f.y-p.y),rng=RANGED_CLS.includes(p.cls)?6:1.7;dungT-=dt;
   if(d>rng){if(!S.keysDown&&dungT<=0&&!p.path.length){dungT=.5;let best=null,bd=1e9;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const tx=Math.floor(f.x)+dx,ty=Math.floor(f.y)+dy;if(passable(tx,ty)){const dd=Math.hypot(tx+.5-p.x,ty+.5-p.y);if(dd<bd){bd=dd;best=[tx,ty];}}}if(best){const pth=findPath(Math.floor(p.x),Math.floor(p.y),(x,y)=>x===best[0]&&y===best[1],best[0],best[1],9000);if(pth)p.path=pth;}}}
   else{p.path=[];p.yaw=Math.atan2(f.x-p.x,f.y-p.y);p.swingT=(p.swingT||0)-dt;if(p.swingT<=0){p.swingT=RANGED_CLS.includes(p.cls)?1.4:1.1;p.atkT=.5;p.atkAnim=RANGED_CLS.includes(p.cls)?'Spellcast_Shoot':'1H_Melee_Attack_Slice_Diagonal';
    const crit=Math.random()<.1,n=(4+lvl('combat')*1.2)*wpnMult()*(crit?1.8:1)*rand(.85,1.15);if(RANGED_CLS.includes(p.cls))sparkle(f.x,f.y,p.cls==='priest'?0xfff3a0:0x9ad8ff,6);hitMob(f,n,crit);}}}
@@ -4162,7 +4242,7 @@ $('start').onclick=()=>{
  const name=(C.name||'').trim()||'Nameless Adventurer';
  const s=T(84,74);
  p={name,race:C.race,cls:C.cls,armor:C.armor,trim:C.trim,body:C.body,hair:C.hair,hairCol:C.hairCol,x:s.x+.5,y:s.y+.5,mapV:2,path:[],yaw:Math.PI/2,moving:false,
-  needs:{hunger:80,energy:85,hygiene:80,social:65,fun:65,sanity:85},gold:50,bank:0,perks:{},items:{bread:2},xp:{},furni:{},hearth:'home',hearthCd:0,buffs:{},flags:{tut:0},ach:{},task:null,idleSince:S.time,casting:null,babies:[],children:[],quests:[],fishlog:{},chains:{}};
+  needs:{hunger:80,energy:85,hygiene:80,social:65,fun:65,sanity:85},gold:50,bank:0,perks:{},items:{bread:2,healpot:2},xp:{},furni:{},hearth:'home',hearthCd:0,buffs:{},flags:{tut:0},ach:{},task:null,idleSince:S.time,casting:null,babies:[],children:[],quests:[],fishlog:{},chains:{}};
  S.time=1440+8*60;
  snd('hearth');begin();
  chat(`Welcome to Stormwind, ${esc(name)} the ${CLASSES[p.cls].name}! You've rented a tiny room in Old Town, right next door to the loudest guild in Stormwind.`);
@@ -4959,7 +5039,7 @@ addEventListener('pointerdown',()=>{MZ.started=true;},{capture:true});
 addEventListener('keydown',()=>{MZ.started=true;},{capture:true});
 $('b-music').onclick=()=>{MZ.on=!MZ.on;$('b-music').childNodes[0].textContent=MZ.on?'🎵':'🔕';};
 // console access for testing / modding: window.SW
-window.SW={step:dt=>{update(dt);render3d(dt);},diveStep:dt=>{diveUpdate(dt);diveRender();},passable,findPath,HOMEB,socialTick,updateNpc,startRaid,endRaid,whelps,DV,MZ,startDive,exitDive,get p(){return p;},S,npcs,OBJS,BUILD,cam,world,T,OFF,walkTo,startAction,snapCam,tick,npcActs,openBoard,ev,rollCatch,landFish,pickFish,chainOffer,togglePanel,questAI,buildMask,openSecret,dWater,dzone,TUNNELS,GATES,DL,camera,scene,renderer,makeAvatar,refreshObjVis,rebuildBlocked};
+window.SW={step:dt=>{update(dt);render3d(dt);},diveStep:dt=>{diveUpdate(dt);diveRender();},passable,findPath,HOMEB,socialTick,updateNpc,startRaid,endRaid,whelps,DV,MZ,startDive,exitDive,get p(){return p;},S,npcs,OBJS,BUILD,cam,world,T,OFF,walkTo,startAction,snapCam,tick,npcActs,openBoard,ev,rollCatch,landFish,pickFish,chainOffer,togglePanel,questAI,buildMask,openSecret,dWater,dzone,TUNNELS,GATES,DL,camera,scene,renderer,makeAvatar,mobs,MOBDEF,lvl,hpMax,refreshObjVis,rebuildBlocked};
 requestAnimationFrame(frame);
 boot();
 </script>
