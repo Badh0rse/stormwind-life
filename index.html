@@ -3790,15 +3790,15 @@ function drinkPotion(){if(!(p.items.healpot>0)){chat('You have no healing potion
 // three iconic skills per class: Q (known from the start), Z and X (trained at your class trainer)
 // effect keys: dmg (x base hit) · aoe (radius, tiles) around self or the target · stun (s) · dot (ticks) · heal/hot/shield (share of max HP) · charge · vanish · drain
 const CSK={
- warrior:[['⚔️','Heroic Strike',{dmg:2.5},8,'A big swing at your target.'],['🐂','Charge',{dmg:1.4,stun:2,charge:1,range:10},14,'Rush to your target from far away and stun it.'],['🌀','Whirlwind',{dmg:1.8,aoe:3.5},12,'Spin and hit everything around you.']],
- paladin:[['🔨','Judgement',{dmg:2.2,heal:.15},8,'Holy hit that also heals you a little.'],['🤲','Lay on Hands',{heal:1,self:1},60,'Fully heal yourself.'],['✨','Consecration',{dmg:1.4,aoe:3.5,heal:.1},14,'Holy ground burns enemies around you.']],
- hunter:[['🏹','Arcane Shot',{dmg:2.6},8,'A powerful magic arrow.'],['🎯','Multi-Shot',{dmg:1.7,aoe:4,around:'target'},12,'Hit your target and enemies near it.'],['🐍','Serpent Sting',{dmg:.7,dot:6},10,'Poison that hurts your target for 6 seconds.']],
- rogue:[['🗡️','Backstab',{dmg:3},8,'Stab your target. In the back, ideally.'],['💥','Eviscerate',{dmg:4.2},14,'A brutal finishing move.'],['💨','Vanish',{vanish:1,heal:.15,self:1},45,'Disappear: enemies lose track of you and you recover a bit.']],
- priest:[['✨','Flash Heal',{heal:.45,self:1},8,'A quick big heal.'],['☀️','Smite',{dmg:2.4},6,'Holy damage on your target.'],['🛡️','Power Word: Shield',{shield:.4,self:1},20,'A shield that soaks up damage for 12 seconds.']],
- mage:[['🔥','Fireball',{dmg:3},8,'A big ball of fire.'],['❄️','Frost Nova',{dmg:1,aoe:4,stun:3},16,'Freeze everything around you for 3 seconds.'],['🐑','Polymorph',{stun:7,poly:1},20,'Turn your target into a sheep for 7 seconds.']],
- warlock:[['💀','Shadow Bolt',{dmg:2.8},8,'A bolt of shadow.'],['🦠','Corruption',{dmg:.8,dot:6},10,'Rot that hurts your target for 6 seconds.'],['🩸','Drain Life',{dmg:2,drain:1},12,'Steal health from your target.']],
- shaman:[['⚡','Lightning Bolt',{dmg:2.6},8,'A bolt of lightning.'],['⛓️','Chain Lightning',{dmg:1.8,aoe:5,max:3,around:'target'},12,'Lightning that jumps to up to 3 enemies.'],['🌊','Healing Wave',{heal:.5,self:1},14,'A big wave of healing.']],
- druid:[['🌿','Wrath',{dmg:2.4},8,'Nature damage on your target.'],['🌙','Moonfire',{dmg:1.4,dot:4},10,'Moonlight burns your target, then keeps burning.'],['🍃','Rejuvenation',{hot:.6,self:1},16,'Heals you over 5 seconds.']],
+ warrior:[['⚔️','Heroic Strike',{dmg:2.5,melee:1},8,'Melee: a big swing at your target.'],['🪓','Heroic Throw',{dmg:1.9,ranged:1,stun:1},10,'Ranged: hurl your weapon (it comes back, mostly).'],['🌀','Whirlwind',{dmg:1.8,aoe:3.5},12,'Area: spin and hit everything around you.']],
+ paladin:[['🔨','Crusader Strike',{dmg:2.3,melee:1,heal:.08},8,'Melee: a holy strike that heals you a little.'],['⚖️','Judgement',{dmg:2.2,ranged:1,heal:.12},10,'Ranged: holy judgement from afar that also heals you.'],['✨','Consecration',{dmg:1.4,aoe:3.5,heal:.1},14,'Area: holy ground burns enemies around you.']],
+ hunter:[['🏹','Arcane Shot',{dmg:2.6,ranged:1},8,'Ranged: a powerful magic arrow.'],['🦅','Raptor Strike',{dmg:2.4,melee:1},8,'Melee: a vicious close-range strike.'],['🎯','Multi-Shot',{dmg:1.7,aoe:4,around:'target',ranged:1},12,'Area: hit your target and every enemy near it.']],
+ rogue:[['🗡️','Backstab',{dmg:3,melee:1},8,'Melee: stab your target. In the back, ideally.'],['🔪','Deadly Throw',{dmg:2.1,ranged:1,stun:1},10,'Ranged: throw a dagger that staggers the target.'],['🌪️','Fan of Knives',{dmg:1.7,aoe:4},12,'Area: knives fly at everything around you.']],
+ priest:[['☀️','Smite',{dmg:2.4,ranged:1},6,'Ranged: holy damage on your target.'],['🔧','Goblin Shock Gauntlet',{dmg:2.1,melee:1,stun:1.5},10,'Melee (Engineering): a jolting punch that stuns. The Light approves. Probably.'],['🌟','Holy Nova',{dmg:1.3,aoe:3.5,heal:.2},14,'Area: a burst of light that hurts enemies and heals you.']],
+ mage:[['🔥','Fireball',{dmg:3,ranged:1},8,'Ranged: a big ball of fire.'],['🔧','Gnomish Shock Gun',{dmg:2.3,melee:1,stun:1},10,'Melee (Engineering): point-blank zap. Gnomes say it is "mostly safe."'],['❄️','Frost Nova',{dmg:1,aoe:4,stun:3},16,'Area: freeze everything around you for 3 seconds.']],
+ warlock:[['💀','Shadow Bolt',{dmg:2.8,ranged:1},8,'Ranged: a bolt of shadow.'],['🩸','Shadow Cleave',{dmg:2.2,melee:1,drain:1},10,'Melee: a fel strike that steals health.'],['☄️','Rain of Fire',{dmg:1.6,aoe:4,around:'target',ranged:1},14,'Area: fire rains on your target and everything near it.']],
+ shaman:[['⚡','Lightning Bolt',{dmg:2.6,ranged:1},8,'Ranged: a bolt of lightning.'],['🌩️','Stormstrike',{dmg:2.6,melee:1},10,'Melee: an axe blow charged with storm.'],['⛓️','Chain Lightning',{dmg:1.8,aoe:5,max:4,around:'target',ranged:1},12,'Area: lightning jumps to up to 4 enemies.']],
+ druid:[['🌙','Moonfire',{dmg:1.4,dot:4,ranged:1},8,'Ranged: moonlight burns your target, then keeps burning.'],['🐻','Maul',{dmg:2.6,melee:1},8,'Melee: turn into a bear (briefly) and maul your target.'],['🍃','Swipe',{dmg:1.7,aoe:3.5},12,'Area: claws hit everything around you.']],
 };
 const SKTRAIN=[null,[3,120],[5,350]];   // [combat level, gold] to learn skill 2 and 3
 const SKKEY=['Q','Z','X'],SKSLOT=['b-abil','b-ab2','b-ab3'],SKIC=['abil-ic','ab2-ic','ab3-ic'],SKCD=['abilcd','ab2cd','ab3cd'];
@@ -3815,9 +3815,9 @@ function useSkill(i){if(!p||!S.running)return;const L=skills(),sk=L[i];if(!sk)re
  const needT=!e.self&&!(e.aoe&&e.around!=='target');
  if(needT&&!t){chat('No target. Click a monster, thug or whelp first.','err');return;}
  const ranged=RANGED_CLS.includes(p.cls);
- if(t&&!e.self){const d=Math.hypot(ex(t)-p.x,ey(t)-p.y),rng=e.range||(ranged?7:2.4)+(t.isMob?0:2.5);if(d>rng){chat('Too far away.','err');return;}
+ if(t&&!e.self){const d=Math.hypot(ex(t)-p.x,ey(t)-p.y),rng=(e.range||(e.melee?2.4:e.ranged?8:ranged?7:2.4))+(t.isMob?0:2.5);if(d>rng){chat('Too far away.','err');return;}
   if(e.charge){const dx=ex(t)-p.x,dy=ey(t)-p.y,L2=Math.hypot(dx,dy)||1;const nx=ex(t)-dx/L2*1.2,ny=ey(t)-dy/L2*1.2;if(passable(Math.floor(nx),Math.floor(ny))){p.x=nx;p.y=ny;p.path=[];}sparkle(p.x,p.y,0xffd27a,18);}}
- p.cds[i]=now+cd*1000;p.atkT=.6;p.atkAnim=ranged?'Spellcast_Shoot':i===2&&e.aoe?'2H_Melee_Spin':'2H_Melee_Attack_Chop';if(p.av&&!p.av.actions[p.atkAnim])p.atkAnim=ranged?'Spellcast_Shoot':'1H_Melee_Attack_Slice_Diagonal';
+ p.cds[i]=now+cd*1000;p.atkT=.6;p.atkAnim=e.melee?'2H_Melee_Attack_Chop':e.ranged?(p.cls==='hunter'?'2H_Ranged_Shoot':p.cls==='warrior'||p.cls==='rogue'?'Throw':'Spellcast_Shoot'):e.aoe?'2H_Melee_Spin':'Spellcast_Shoot';if(p.av&&!p.av.actions[p.atkAnim])p.atkAnim=e.melee?'1H_Melee_Attack_Slice_Diagonal':'Spellcast_Shoot';
  const base=(4+lvl('combat')*1.3)*wpnMult(),hit=(x,n)=>{if(x.isMob)hitMob(x,n,true);else if(S.raid)hitWhelp(x,n*.3,true);};
  let hitList=[];
  if(e.aoe){const cx=e.around==='target'&&t?ex(t):p.x,cy=e.around==='target'&&t?ey(t):p.y;hitList=enemiesNear(cx,cy,e.aoe).slice(0,e.max||12);if(e.around==='target'&&t&&!hitList.includes(t))hitList.unshift(t);}
@@ -3832,7 +3832,7 @@ function useSkill(i){if(!p||!S.running)return;const L=skills(),sk=L[i];if(!sk)re
  if(e.vanish){for(const m of mobs)if(!m.dead&&m.state!=='idle')m.state='return';p.foe=null;p.fight=null;p.hidden=true;setTimeout(()=>{if(p)p.hidden=false;},1500);sparkle(p.x,p.y,0x9a9a9a,30);}
  const col={warrior:0xffd27a,paladin:0xfff3a0,hunter:0xaad372,rogue:0xfff468,priest:0xffffff,mage:e.stun?0x9fe0ff:0xff6a20,warlock:0x9a4aff,shaman:0x7ab0ff,druid:0x7aff9a}[p.cls]||0xffffff;
  for(const x of hitList)sparkle(ex(x),ey(x),col,e.aoe?12:22);if(e.aoe&&!t)sparkle(p.x,p.y,col,30);
- floatText(name,'#ffd100');sfx(e.heal||e.hot||e.shield?'confirm':e.aoe?'anvil':'slice',.5,e.heal?1.4:1);}
+ floatText(name,'#ffd100');sfx(e.aoe?'anvil':e.ranged?'draw':'slice',.5,1);if(e.heal)sfx('confirm',.35,1.4);}
 function useAbility(){useSkill(0);}
 
 const mobFree=(x,y)=>passable(Math.floor(x),Math.floor(y))||tileAt(Math.floor(x),Math.floor(y))===G;
