@@ -1019,7 +1019,7 @@ const fmtClock=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padSta
 const fmtDur=m=>m>=60?(m%60?`${Math.floor(m/60)}h ${m%60}m`:`${m/60}h`):`${m}m`;
 // Levels 1-60 for every skill. Combat = your character level (fight, train, do quests); professions level by doing them.
 const MAXLV=60;
-const xpNeed=(k,L)=>k==='combat'?Math.round((5+2*L)*(4+.36*L)):15+4*L;   // XP to go from level L to L+1
+const xpNeed=(k,L)=>k==='combat'?Math.round((5+2*L)*(3+.2*L)):15+4*L;   // XP to go from level L to L+1
 const XPT={};const xpTable=k=>{const key=k==='combat'?'c':'p';if(XPT[key])return XPT[key];const t=[0,0];for(let L=1;L<MAXLV;L++)t[L+1]=t[L]+xpNeed(k,L);return XPT[key]=t;};
 const lvl=k=>{const x=(p&&p.xp[k])||0,t=xpTable(k);let L=1;while(L<MAXLV&&x>=t[L+1])L++;return L;};
 const lvProg=k=>{const L=lvl(k);if(L>=MAXLV)return 1;const t=xpTable(k),x=(p&&p.xp[k])||0;return (x-t[L])/(t[L+1]-t[L]);};
@@ -1737,13 +1737,13 @@ function tutorialAI(){
  if(i===2)return tryNpc(npcs.find(n=>n.name==='Princess Donut'),'Join the Princess Posse');
  if(i===3)return tryCustom(objNamed('Posse Quest Board'),{label:'Read the Guild Orders',mins:3,done(){const o=posseOffers()[0];if(o!=null&&p.quests.length<QCAP){p.quests.push({...GQ[o],id:'g'+o,guild:1,n:0});posse().offers=posse().offers.filter(x=>x!==o);chat(`Guild quest accepted: <b>${GQ[o].title}</b>`);}else p.flags.questsDone=Math.max(1,p.flags.questsDone||0);}});
  if(i===4)return tryAct(fishSpotAt('canal'),'Fish');
- if(i===5||i===6)return tryCustom(objNamed('Captain Saltbeard'),{label:'Take a Guided Dive',mins:60,hidesPlayer:true,done(){p.flags.tDived=1;addItem('supplies',1);chat('Captain Saltbeard takes you on a short guided dive and you bring up a crate of Salvaged Supplies. (Play a dive yourself any time: talk to Saltbeard and choose Go Diving.)');}});
+ if(i===5||i===6)return tryCustom(objNamed('Captain Saltbeard'),{label:'Take a Guided Dive',mins:60,hidesPlayer:true,done(){p.flags.tDived=1;addItem('supplies',1);chat('Captain Saltbeard takes you on a short guided dive and you bring up a crate of Salvaged Supplies. (Diving is played by hand: talk to Saltbeard and choose Go Diving.)');}});
  if(i===7&&S.raid){const w=whelps.filter(w=>w.hp>0).sort((a,b)=>Math.hypot(a.position.x-wx(p.x),a.position.z-wz(p.y))-Math.hypot(b.position.x-wx(p.x),b.position.z-wz(p.y)))[0];if(w){endTask();p.fight=w;chat(`${esc(p.name)} charges at a whelp!`,'fw');return true;}}
  return false;}
 function lifeAI(){
  const h=hour(),n=p.needs,f=p.flags;
  if(tutOn()&&!S.diving&&tutorialAI())return;
- if(!S.diving&&!tutOn()){if(Math.random()<.35&&gearAI())return;if(Math.random()<(p.quests.some(q=>q.type==='kill'||q.type==='loot')?.7:.45)&&combatAI())return;if(inCrypt()&&tryAct(objNamed('Stairs to the Surface'),'Climb Back Up'))return;}
+ if(!S.diving&&!tutOn()){if(Math.random()<.35&&gearAI())return;if(Math.random()<(p.quests.some(q=>q.type==='kill'||q.type==='loot')?.75:.55)&&combatAI())return;if(inCrypt()&&tryAct(objNamed('Stairs to the Surface'),'Climb Back Up'))return;}
  if(needsAI(40))return;
  if(derbyOn()&&tryAct(fishSpot(true),''))return;
  if((h>=22||h<6)&&n.energy<75&&tryAct(HOMEBED(),'Sleep'))return;
@@ -3835,10 +3835,10 @@ function killMob(m){const D=MOBDEF[m.type];if(S.auto&&p.huntN>0&&m.type===p.hunt
  if(m.type==='koboldBoss'){ach('goldtooth');qBanner('Goldtooth defeated!','The kobolds of Fargodeep scatter');prepAdd('def',6,'boss');}
  if(m.type==='cryptBoss'){ach('mortimer');qBanner('Grave Lord Mortimer defeated!','The Catacombs fall silent... for now');prepAdd('def',10,'boss');}
  if(p.flags.kills%10===0)prepAdd('def',2,'dungeon');}
-function playerDefeated(){const cr=inCrypt();p.foe=null;p.huntN=0;p.huntT=null;p.flags.deathAt=S.time;p.hp=Math.round(hpMax()*.5);const fee=Math.min(50,Math.round(p.gold*.1));p.gold-=fee;p.needs.sanity=clamp(p.needs.sanity-10,0,100);ach('deaths');
+function playerDefeated(){const cr=inCrypt();p.foe=null;p.huntN=0;p.huntT=null;p.flags.deathAt=S.time;p.hp=hpMax();const fee=Math.min(50,Math.round(p.gold*.1));p.gold-=fee;p.needs.sanity=clamp(p.needs.sanity-10,0,100);ach('deaths');
  for(const m of mobs)if(!m.dead&&(m.state==='chase'||m.state==='attack')){m.state='return';}
- if(cr){p.x=124.5;p.y=10.5+OFF;}else{p.x=18.5;p.y=63.5+OFF;}p.path=[];snapCam();
- qBanner('You have been defeated!',`A spirit healer patches you up${fee?` (${fee}g fee)`:''}.`);chat(`💀 You were defeated${cr?' in the Catacombs':' at Fargodeep Camp'}. You wake up at the ${cr?'bottom of the stairs':'main gate'}, aching${fee?` and ${fee}g lighter`:''}.`,'err');sfx('thud',.7,.7);}
+ if(cr){const o=objNamed('Catacomb Entrance');p.x=o.cx;p.y=o.cy+1.8;}else{p.x=30.5;p.y=63.5+OFF;}p.path=[];snapCam();
+ qBanner('You have been defeated!',`A spirit healer patches you up${fee?` (${fee}g fee)`:''}.`);chat(`💀 You were defeated${cr?' in the Catacombs':' at Fargodeep Camp'}. You wake up ${cr?'outside the crypt door':'in the Trade District'}, aching${fee?` and ${fee}g lighter`:''}.`,'err');sfx('thud',.7,.7);}
 function drinkPotion(){if(!(p.items.healpot>0)){chat('You have no healing potions. Bartholomew\'s Goods sells them (20g).','err');return;}if(p.potCd>performance.now()){chat('Potion is on cooldown.','err');return;}
  takeItem('healpot');p.potCd=performance.now()+8000;const h=Math.round(hpMax()*.5);p.hp=Math.min(hpMax(),(p.hp||0)+h);dmgFloat('+'+h,p.x,p.y,2.4,'#5aff7a');sparkle(p.x,p.y,0x7aff9a,18);sfx('glass',.5);}
 // three iconic skills per class: Q (known from the start), Z and X (trained at your class trainer)
@@ -3906,7 +3906,7 @@ function combatAI(){const L=lvl('combat'),since=S.time-(p.flags.deathAt||-1e9);i
  if(!types.length)return false;
  const crowd=m=>mobs.filter(o=>o!==m&&!o.dead&&!MOBDEF[o.type].passive&&Math.hypot(o.x-m.x,o.y-m.y)<5.5).length;const m=mobs.filter(m=>!m.dead&&types.includes(m.type)).sort((a,b)=>(crowd(a)*12+Math.hypot(a.x-p.x,a.y-p.y))-(crowd(b)*12+Math.hypot(b.x-p.x,b.y-p.y)))[0];if(!m)return false;
  const crypt=m.hx>=MW;if(crypt&&!inCrypt())return tryAct(objNamed('Catacomb Entrance'),'Enter the Catacombs');if(!crypt&&inCrypt())return tryAct(objNamed('Stairs to the Surface'),'Climb Back Up');
- endTask();p.huntN=3+Math.floor(Math.random()*4);p.huntType=m.type;const far=Math.hypot(m.x-p.x,m.y-p.y)>10;if(far){walkNear(m.x,m.y);if(!p.path.length)return false;p.huntT=m;}else{p.foe=m;if(m.state==='idle')m.state='chase';}chat(`${esc(p.name)} goes hunting: ${MOBDEF[m.type].name}.`,'fw');return true;}
+ endTask();p.huntN=4+Math.floor(Math.random()*5);p.huntType=m.type;const far=Math.hypot(m.x-p.x,m.y-p.y)>10;if(far){walkNear(m.x,m.y);if(!p.path.length)return false;p.huntT=m;}else{p.foe=m;if(m.state==='idle')m.state='chase';}chat(`${esc(p.name)} goes hunting: ${MOBDEF[m.type].name}.`,'fw');return true;}
 // autopilot shopping: train class skills, upgrade weapons, keep a few potions
 function gearAI(){const L=lvl('combat');
  for(const i of [1,2])if(!knowsSkill(i)&&L>=SKTRAIN[i][0]&&p.gold>=SKTRAIN[i][1]+60&&(i===1||knowsSkill(1))){const tr=npcs.find(n=>n.trainer===p.cls);if(tr&&tryNpc(tr,'Train'))return true;}
