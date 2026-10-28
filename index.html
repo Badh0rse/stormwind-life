@@ -99,7 +99,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;fon
 #toast .td{font-size:12px;color:#cfc4ad}
 #toast .ti{font-size:30px}
 @keyframes pop{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-#zonebanner{position:fixed;left:50%;top:22%;transform:translateX(-50%);font:800 38px Cinzel,Georgia,serif;color:#ffd100;text-shadow:0 2px 0 #5a3d10,0 0 18px rgba(0,0,0,.9);pointer-events:none;transition:opacity 1s;opacity:0;text-align:center}
+#zonebanner{position:fixed;left:50%;top:calc(12% + 64px);transform:translateX(-50%);font:800 38px Cinzel,Georgia,serif;color:#ffd100;text-shadow:0 2px 0 #5a3d10,0 0 18px rgba(0,0,0,.9);pointer-events:none;transition:opacity 1s;opacity:0;text-align:center}
 #zonebanner small{display:block;font-size:16px;color:#fff;font-weight:600}
 #loading{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(ellipse at center,#1d2440,#05060c)}
 #loading .title{font-size:clamp(34px,7vw,64px)}
@@ -128,7 +128,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;fon
 #doom{position:fixed;left:50%;top:10px;transform:translateX(-50%);padding:5px 16px;font:700 14px Cinzel,Georgia,serif;color:#ffb070;text-align:center;z-index:5;white-space:nowrap}
 #doom small{display:block;font:500 10.5px system-ui,sans-serif;color:#cfc4ad;letter-spacing:.02em}
 #doom.hot{color:#ff6040;box-shadow:0 0 18px rgba(255,80,30,.6),0 0 0 1px #000}
-#banner{position:fixed;left:50%;top:30%;transform:translateX(-50%);font:800 clamp(24px,4vw,40px) Cinzel,Georgia,serif;color:#ff8a4a;text-shadow:0 2px 0 #3a0d08,0 0 22px rgba(0,0,0,.9);pointer-events:none;transition:opacity 1.2s;opacity:0;text-align:center;z-index:6;width:90vw}
+#banner{position:fixed;left:50%;top:calc(12% + 136px);transform:translateX(-50%);font:800 clamp(24px,4vw,40px) Cinzel,Georgia,serif;color:#ff8a4a;text-shadow:0 2px 0 #3a0d08,0 0 22px rgba(0,0,0,.9);pointer-events:none;transition:opacity 1.2s;opacity:0;text-align:center;z-index:6;width:90vw}
 #banner small{display:block;font-size:15px;color:#fff;font-weight:600}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:79}
 #ending{position:fixed;inset:0;z-index:80;background:#000;display:grid;place-items:center;text-align:center;padding:20px;overflow-y:auto}
@@ -201,7 +201,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0d0c0a;color:#eee;fon
 #tracker .to.ok{color:#1eff00}
 #tracker .tw{color:#9a8f78;margin-left:20px;font-size:10.5px}
 #tracker .tgo{color:#9fd5ff;font-size:10.5px;margin-left:20px}
-#qbanner{position:fixed;left:50%;top:16%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:41;opacity:0;transition:opacity .5s}
+#qbanner{position:fixed;left:50%;top:12%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:41;opacity:0;transition:opacity .5s}
 #qbanner .a{font:800 30px Cinzel,Georgia,serif;color:#ffd100;text-shadow:0 2px 0 #5a3d10,0 0 18px rgba(0,0,0,.9)}
 #qbanner .b{font:600 16px system-ui;color:#fff;text-shadow:0 1px 3px #000}
 /* ---- UI edit mode: drag to move, corner to resize ---- */
@@ -2226,7 +2226,7 @@ function openStable(){S.panel='stable';
  $('pbody').querySelectorAll('[data-mnt]').forEach(b=>b.onclick=()=>{const i=+b.dataset.mnt,m=MOUNTS[i];if(p.gold<m[1])return;p.gold-=m[1];p.mount=i+1;sfx('coins',.7);qBanner('New Mount!',`${m[3]} ${m[0]}: +${Math.round((m[2]-1)*100)}% speed outdoors`);openStable();});}
 let homeDeco=[];
 function applyHome(){for(const o of homeDeco)scene.remove(o);homeDeco=[];const h=p.home||0;HOMEB.name=HOMES[h][0]==='Rented Room'?'Your Rented Room':'Your '+HOMES[h][0];if(HOMEB.lbl)HOMEB.lbl.lastNm=null;
- const put=(k,x,y,f,rot)=>{const o=placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),fit:f,rot:rot||0});if(o)homeDeco.push(o);};
+ const put=(k,x,y,f,rot)=>{const o=placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),y:/rug/.test(k)?.05:.03,fit:f,rot:rot||0});if(o)homeDeco.push(o);};
  if(h>=1){put('fur/couch_pillows',66,73,1.4,180);put('fur/rug_oval_A',66,71,2.4);}
  if(h>=2){put('dun/banner_triple_blue',64,69,1.6);put('fur/lamp_standing',68,69,.8);put('dun/candle_triple',69,72,.4);}
  if(h>=3){put('dun/pillar_decorated',64,73,1,0);put('dun/coin_stack_large',68,73,.5);put('dun/keg_decorated',69,70,.9);}}
@@ -2320,7 +2320,7 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFi
 renderer.domElement.id='c';renderer.domElement.tabIndex=0;
 document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,2000);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.3,1100);
 scene.fog=new THREE.Fog(0xcfe3f2,140,600);
 const hemi=new THREE.HemisphereLight(0xd6e8ff,0x5d6a3a,1.0);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff1d6,2.6);sun.castShadow=true;sun.shadow.mapSize.set(GFXQ[GFX.cur].sh,GFXQ[GFX.cur].sh);
@@ -2510,7 +2510,7 @@ function buildTerrain(){
     if(dx)G_('stone').box(dx>0?X1-.5:X0,0,Z0,dx>0?X1:X0+.5,.3,Z1,2);else G_('stone').box(X0,0,dy>0?Z1-.5:Z0,X1,.3,dy>0?Z1:Z0+.5,2);}
   }
  }
- for(const b of BUILD){const x1=b.x+b.w-1,y1=b.y+b.h-1;G_(floorMat(b)).hquad((b.x+.5)*TS,(b.y+.5)*TS,(x1+.5)*TS,(y1+.5)*TS,.012,4);}
+ for(const b of BUILD){const x1=b.x+b.w-1,y1=b.y+b.h-1;G_(floorMat(b)).hquad((b.x+.5)*TS,(b.y+.5)*TS,(x1+.5)*TS,(y1+.5)*TS,.03,4);}
  // sea floor + open ocean
  const sf=new GB();sf.hquad(-400,-400,W*TS+400,OFF*TS-18,-8,8);
  add(sf.mesh(MAT.sand,false));
@@ -3012,7 +3012,7 @@ function buildDecor(){
  // blue lion banners hung on house fronts
  for(const b of ALLB){if(!b.decor||b.style==='tower'||hash(b.x,b.y,33)>.45)continue;const x1=b.x+b.w,y1=b.y+b.h;lionBanner(wx((b.x+x1)/2),Math.min(b.hgt-.8,6.4)-1.8,wz(y1)+.05,0,1.4,3);}
  // furnished interiors (new raw coords)
- for(const [k,x,y,f,rot,sy] of INDRESS){const o=placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),fit:f,rot:rot||0});if(o&&sy)o.scale.y*=sy;}
+ for(const [k,x,y,f,rot,sy] of INDRESS){const o=placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),y:/rug/.test(k)?.05:.03,fit:f,rot:rot||0});if(o&&sy)o.scale.y*=sy;}
  for(const [x,y,rot] of PEWS){const g=PROC.pews();g.position.set(wx(x),0,wz(y+OFF));g.rotation.y=rot||0;scene.add(g);}
  for(const [x,y] of BRAZIERS){const g=new THREE.Group();g.add(meshAt(new THREE.CylinderGeometry(.18,.3,1.2,8),MAT.iron,0,.6,0));g.add(meshAt(new THREE.CylinderGeometry(.6,.35,.4,10),MAT.iron,0,1.35,0));const f=meshAt(new THREE.ConeGeometry(.4,.9,8),MAT.fire,0,1.9,0);g.add(f);const l=new THREE.PointLight(0xff9a40,8,10,2);l.position.y=2.2;g.add(l);g.position.set(wx(x+.5),0,wz(y+OFF+.5));scene.add(g);}
  // torches on the inside walls of every real building
@@ -3058,7 +3058,7 @@ function buildDecor(){
  // market & trade dressing
  for(const [k,x,y] of [['hex/decoration/props/crate_A_small',31,61],['hex/decoration/props/sack',31,62],['dun/barrel_small_stack',27,61],['hex/decoration/props/wheelbarrow',48,61],['hex/decoration/props/crate_open',107,39],['dun/keg_decorated',103,39],['dun/keg',107,40],['hex/decoration/props/resource_stone',102,37],['hex/decoration/props/target',80,76],['hex/decoration/props/weaponrack',77,76]])placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),fit:1.2,rot:rand(0,360)});
  // interior dressing
- for(const [k,ox,oy,f,rot] of DRESS){const [x,y]=SHIFT(ox,oy);placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),fit:f,rot:rot||0});}
+ for(const [k,ox,oy,f,rot] of DRESS){const [x,y]=SHIFT(ox,oy);placeModel(k,{x:wx(x+.5),z:wz(y+OFF+.5),y:/rug/.test(k)?.05:.03,fit:f,rot:rot||0});}
  {const red=new THREE.MeshStandardMaterial({color:0x8a1a1a,roughness:.9});const c1=meshAt(new THREE.BoxGeometry(3.4,.03,23),red,wx(68),.03,wz(OFF+22.5),false);scene.add(c1);const c2=meshAt(new THREE.BoxGeometry(3,.03,18),red,wx(102.5),.03,wz(OFF+79.5),false);scene.add(c2);}
  for(const [k,x,y,f] of [['dun/table_medium_tablecloth',41,69,2],['dun/table_medium_tablecloth',45,70,2],['dun/stool',40,69,.6],['dun/stool',42,69,.6],['dun/stool',44,70,.6],['dun/stool',46,70,.6],['fur/rug_oval_A',84,74,2.6],['fur/lamp_standing',86,77,.7],['dun/candle_triple',99,64,.4],['dun/coin_stack_large',64,46,.6],['fur/couch_pillows',84,63,1],
   ['dun/pillar_decorated',43,6,1.4],['dun/pillar_decorated',58,6,1.4],['dun/pillar_decorated',43,14,1.4],['dun/pillar_decorated',58,14,1.4],['dun/banner_triple_blue',104,41,2],['dun/banner_triple_blue',101,41,2],['dun/shelf_large',45,43,2],['dun/crates_stacked',46,49,1.4],['dun/keg_decorated',81,62,1],['dun/barrel_small_stack',86,68,1],['dun/shelves',97,62,1.5],['dun/keyring_hanging',95,62,.5]]){
@@ -3563,7 +3563,7 @@ function followPet(pt,sd,dt,ws){
  if(ws>0&&pt.race==='imp'){pt.talkT=(pt.talkT||20)-dt;if(pt.talkT<=0){pt.talkT=rand(30,60);if(!p.hidden)say(pt,pick(LINES.imp),false);}}
  if(pt.bubble&&(pt.bubble.t-=dt)<=0)pt.bubble=null;
 }
-const _camDir=new THREE.Vector3(),CTREES=[];
+const _camDir=new THREE.Vector3(),CTREES=[],_sd=new THREE.Vector3(),_sr=new THREE.Vector3(),_su=new THREE.Vector3(),_sp=new THREE.Vector3();
 const CINE=[{d:7,p:.2,off:.45,orbit:.12},{d:10,p:.3,off:-.55,orbit:-.1},{d:15,p:.48,off:0,orbit:.07},{d:5.5,p:.13,off:1.1,orbit:.15},{d:12,p:.62,off:.3,orbit:-.06}];
 function fadeTrees(){const cx=camera.position.x,cz=camera.position.z,tx=camTarget.x,tz=camTarget.z,dx=tx-cx,dz=tz-cz,L2=dx*dx+dz*dz||1;
  for(const t of CTREES){if(!t)continue;const px=t.position.x-cx,pz=t.position.z-cz,u=(px*dx+pz*dz)/L2;let hide=false;
@@ -3589,8 +3589,8 @@ function render3d(dt){
   dirAt(cam.ep);let d=cam.dist;
   ray.set(camTarget,_camDir);ray.far=cam.dist+1.5;
   // buildings between you and the camera get cut away (Sims-style); only city walls and towers pull the camera in
-  for(const h of ray.intersectObjects(occluders,false)){const b=h.object.userData.b;if(b){b.occlT=.5;continue;}d=Math.max(1.2,Math.min(d,h.distance-.45));break;}
-  {const near=new THREE.Vector3().copy(camTarget).addScaledVector(_camDir,d);const tb=bAt(near.x/TS,near.z/TS);if(tb)tb.occlT=.5;}
+  for(const h of ray.intersectObjects(occluders,false)){const b=h.object.userData.b;if(b){b.occlT=.9;continue;}d=Math.max(1.2,Math.min(d,h.distance-.45));break;}
+  {const near=new THREE.Vector3().copy(camTarget).addScaledVector(_camDir,d);const tb=bAt(near.x/TS,near.z/TS);if(tb)tb.occlT=.9;}
   ray.far=Infinity;
   camera.position.copy(camTarget).addScaledVector(_camDir,d);camera.lookAt(camTarget);fadeTrees();
   if(DFX.shake>0){DFX.shake-=dt;const a=Math.min(1,DFX.shake)*.16*(1+doom().phase*.25);camera.position.x+=rand(-a,a);camera.position.y+=rand(-a,a);camera.position.z+=rand(-a,a);}
@@ -3600,7 +3600,7 @@ function render3d(dt){
  sky.position.copy(camera.position);
  updateSky();updateLampLights(dt);updateAsh(dt);
  if(!S.apoc&&doom().phase===4&&world.ready){if(!dragon){dragon=makeDragon();scene.add(dragon);}const a=elapsed*.04;dragon.position.set(wx(56)+Math.cos(a)*230,95,wz(OFF+50)+Math.sin(a)*230);dragon.lookAt(wx(56)+Math.cos(a+.1)*230,95,wz(OFF+50)+Math.sin(a+.1)*230);dragon.wings.forEach((w,i)=>w.rotation.z=(i?-1:1)*Math.sin(elapsed*2.5)*.5);}
- if(world.sunDir){sun.position.copy(camTarget).addScaledVector(world.sunDir,140);sun.target.position.copy(camTarget);}
+ if(world.sunDir){{const c=sun.shadow.camera,ts=(c.right-c.left)/sun.shadow.mapSize.x,d=_sd.copy(world.sunDir).normalize(),r=_sr.crossVectors(_su.set(0,1,0),d).normalize(),u=_su.crossVectors(d,r);const pr=camTarget.dot(r),pu=camTarget.dot(u);_sp.copy(camTarget).addScaledVector(r,Math.round(pr/ts)*ts-pr).addScaledVector(u,Math.round(pu/ts)*ts-pu);sun.position.copy(_sp).addScaledVector(d,140);sun.target.position.copy(_sp);}}
  // water motion
  TEX.water.offset.x=(elapsed*.02)%1;TEX.water.offset.y=(elapsed*.013)%1;
  if(world.sea)world.sea.position.y=Math.sin(elapsed*.8)*.05;
@@ -3625,7 +3625,7 @@ function render3d(dt){
  updateRaid(dt);
  updateDungeon(dt);
  updateShadows(dt);
- shadowF=(shadowF+1)%(GFX.cur==='high'?2:3);if(shadowF===0)renderer.shadowMap.needsUpdate=true;
+ shadowF=(shadowF+1)%(GFX.cur==='low'?2:1);if(shadowF===0)renderer.shadowMap.needsUpdate=true;
  gfxWatch(dt);
  renderer.render(scene,camera);
  updateLabels(dt);
