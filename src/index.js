@@ -4,6 +4,14 @@
 //              GET  /api/inbox   (the uploader fetches posts made in Discord, as a Lua file)
 //              GET  /            (health check)
 // Both API calls need:  Authorization: Bearer <UPLOAD_SECRET>
+// Optional .env file next to package.json (handy on panel hosts that only take files).
+try {
+  const envFile = require('path').join(__dirname, '..', '.env');
+  for (const line of require('fs').readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
+    if (m && !line.trim().startsWith('#') && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch {}
 const http = require('http');
 const crypto = require('crypto');
 const { Client, GatewayIntentBits, Events, MessageFlags, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
@@ -17,7 +25,7 @@ const { commands } = require('./commands');
 const env = process.env;
 const TOKEN = env.DISCORD_TOKEN;
 const SECRET = env.UPLOAD_SECRET || '';
-const PORT = Number(env.PORT || 3000);
+const PORT = Number(env.PORT || env.SERVER_PORT || 3000);
 const TZ = env.TIMEZONE || 'America/New_York';
 const OFFICER_ROLE = env.OFFICER_ROLE_ID || '';
 const MAX_UPLOAD = 8 * 1024 * 1024;
