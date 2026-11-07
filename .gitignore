@@ -1,0 +1,6 @@
+node_modules/
+data/
+.env
+uploader/uploader.config.json
+test/sample_sv.lua
+*.zip

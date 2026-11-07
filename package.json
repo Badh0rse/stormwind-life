@@ -1,0 +1,10 @@
+{
+  "name": "mongo-bot",
+  "version": "1.0.0",
+  "description": "SYSTEM AI: Discord bot for the Princess Posse WoW Forever guild addon",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": { "start": "node src/index.js", "test": "node test/test.js" },
+  "engines": { "node": ">=20" },
+  "dependencies": { "discord.js": "14.18.0" }
+}
